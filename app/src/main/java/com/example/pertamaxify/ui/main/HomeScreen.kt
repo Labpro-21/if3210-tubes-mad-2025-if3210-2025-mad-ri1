@@ -1,6 +1,8 @@
 package com.example.pertamaxify.ui.main
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -9,6 +11,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.JwtPayload
+import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.ui.song.NewSongsSection
+import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.ui.theme.WhiteText
 import com.example.pertamaxify.utils.JwtUtils
 
@@ -18,12 +23,34 @@ fun HomeScreen() {
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
 
+    // Dummy data
+    val newSongs = remember {
+        listOf(
+            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000035", "https://actions.google.com/sounds/v1/ambiences/barnyard_with_animals.ogg"),
+            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000033", "..."),
+            Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
+            Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
+        )
+    }
+
+    val recentlyPlayed = remember {
+        listOf(
+            Song("Jazz is for ordinary people", "berlioz", "Sickboy Chainsmoker.png", "..."),
+            Song("Loose", "Daniel Caesar", "Sickboy Chainsmoker.png", "..."),
+            Song("Nights", "Frank Ocean", "Sickboy Chainsmoker.png", "..."),
+            Song("Kiss of Life", "Sade", "Sickboy Chainsmoker.png", "..."),
+            Song("BEST INTEREST", "Tyler, The Creator", "Sickboy Chainsmoker.png", "...")
+        )
+    }
+
     LaunchedEffect(Unit) {
         token.value = SecurePrefs.getAccessToken(context) ?: "No token found"
         decodedPayload.value = JwtUtils.decodeJwt(token.value)
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
+        rememberScrollState()
+    )) {
         Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium, color = WhiteText)
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Token: ${token.value}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
@@ -37,5 +64,10 @@ fun HomeScreen() {
             Text(text = "Issued At: ${it.iat}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
             Text(text = "Expires At: ${it.exp}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
         } ?: Text(text = "Failed to decode JWT", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
+
+        Spacer(modifier = Modifier.height(24.dp))
+        NewSongsSection(songs = newSongs)
+        Spacer(modifier = Modifier.height(24.dp))
+        RecentlyPlayedSection(songs = recentlyPlayed)
     }
 }
