@@ -9,8 +9,7 @@ data class Song(
     val singer: String,
     val image: String, // Image path
     val audio: String, // Audio path
-    val addedAt: String? = "", // When the song added to app
-    val recentlyPlayed: String? = "", // When you last played this song huh
+
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
 )
