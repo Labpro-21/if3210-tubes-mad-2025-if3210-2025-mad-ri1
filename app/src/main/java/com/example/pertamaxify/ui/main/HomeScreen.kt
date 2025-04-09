@@ -28,8 +28,8 @@ fun HomeScreen() {
     // Dummy data
     val newSongs = remember {
         listOf(
-            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000035", "https://actions.google.com/sounds/v1/ambiences/barnyard_with_animals.ogg"),
-            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000033", "..."),
+            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000033", "content://media/external/file/1000000035"),
+            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000034", "..."),
             Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
             Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
         )

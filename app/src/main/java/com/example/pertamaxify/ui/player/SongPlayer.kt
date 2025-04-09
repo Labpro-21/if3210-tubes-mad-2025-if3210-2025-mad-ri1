@@ -1,7 +1,5 @@
 package com.example.pertamaxify.ui.player
 
-import android.content.Context
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,17 +12,13 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.theme.WhiteText
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.res.painterResource
+import com.example.pertamaxify.R
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -47,8 +41,8 @@ fun MusicPlayerScreen(song: Song, onBack: () -> Unit = {}) {
     }
 
     var isPlaying by remember { mutableStateOf(true) }
-    var currentPosition by remember { mutableStateOf(0L) }
-    var duration by remember { mutableStateOf(0L) }
+    var currentPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(player) {
         while (true) {
@@ -109,23 +103,41 @@ fun MusicPlayerScreen(song: Song, onBack: () -> Unit = {}) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { /* prev song logic */ }) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = WhiteText)
+                Icon(
+                    painter = painterResource((R.drawable.skip_prev)),
+                    contentDescription = null, tint = WhiteText,
+                    modifier = Modifier.size(40.dp)
+                )
             }
 
             IconButton(onClick = {
                 isPlaying = !isPlaying
                 if (isPlaying) player.play() else player.pause()
             }) {
-                Icon(
-                    if (isPlaying) Icons.Default.PlayArrow else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = WhiteText,
-                    modifier = Modifier.size(48.dp)
-                )
+                if (isPlaying) {
+                    Icon(
+                        painter = painterResource(R.drawable.pause),
+                        contentDescription = "Pause",
+                        tint = WhiteText,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                else {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = "Play",
+                        tint = WhiteText,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+
             }
 
             IconButton(onClick = { /* next song logic */ }) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, tint = WhiteText)
+                Icon(
+                    painter = painterResource(R.drawable.skip_next),
+                    contentDescription = null, tint = WhiteText,
+                    modifier = Modifier.size(40.dp))
             }
         }
     }
