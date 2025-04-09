@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.pertamaxify.data.model.Song
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.example.pertamaxify.data.model.Song
