@@ -1,5 +1,6 @@
 package com.example.pertamaxify.ui.song
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,7 +28,7 @@ fun LocalExternalImage(fileName: String) {
 }
 
 @Composable
-fun NewSongsSection(songs: List<Song>) {
+fun NewSongsSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("New songs", style = Typography.displayLarge, color = WhiteText)
         LazyRow {
@@ -36,6 +37,7 @@ fun NewSongsSection(songs: List<Song>) {
                     modifier = Modifier
                         .width(140.dp)
                         .padding(8.dp)
+                        .clickable { onSongClick(song) } // clickable here
                 ) {
                     LocalExternalImage(song.image)
                     Text(song.title, color = WhiteText, maxLines = 1)
@@ -45,6 +47,7 @@ fun NewSongsSection(songs: List<Song>) {
         }
     }
 }
+
 
 @Composable
 fun RecentlyPlayedSection(songs: List<Song>) {
@@ -60,7 +63,7 @@ fun RecentlyPlayedSection(songs: List<Song>) {
                     LocalExternalImage(song.image)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(song.title, color = Color.White)
+                        Text(song.title, color = WhiteText)
                         Text(song.singer, color = Color.Gray)
                     }
                 }
