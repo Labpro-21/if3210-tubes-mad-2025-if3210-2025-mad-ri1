@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.model.Song
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
-import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
 
