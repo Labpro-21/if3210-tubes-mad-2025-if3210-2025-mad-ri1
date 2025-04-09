@@ -9,7 +9,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,9 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.ui.auth.LoginActivity
+import com.example.pertamaxify.ui.main.HomeActivity
 import com.example.pertamaxify.ui.theme.BackgroundColor
 import com.example.pertamaxify.utils.JwtUtils
-import com.example.pertamaxify.ui.main.HomeActivity
 
 @SuppressLint("CustomSplashScreen")
 class SplashScreenActivity : ComponentActivity() {

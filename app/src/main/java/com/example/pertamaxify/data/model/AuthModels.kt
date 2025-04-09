@@ -15,3 +15,7 @@ data class LoginResponse(
 data class ErrorResponse(
     @SerializedName("error") val message: String
 )
+
+data class RefreshTokenRequest(
+    @SerializedName("refreshToken") val refreshToken: String
+)

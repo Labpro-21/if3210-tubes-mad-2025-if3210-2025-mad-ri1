@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.model.ErrorResponse
+import com.example.pertamaxify.data.model.LoginResponse
 import com.example.pertamaxify.data.remote.AuthRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
@@ -13,17 +14,18 @@ class LoginViewModel(private val authRepository: AuthRepository = AuthRepository
     fun login(
         email: String,
         password: String,
-        onSuccess: (String) -> Unit,
+        onSuccess: (String, String) -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             try {
                 val response = authRepository.login(email, password)
                 if (response.isSuccessful) {
-                    response.body()?.let { loginResponse ->
-                        val token = loginResponse.accessToken
-                        Log.d("LoginViewModel", "Login successful: Access Token: $token")
-                        onSuccess(token)
+                    response.body()?.let { loginResponse: LoginResponse ->
+                        val accessToken = loginResponse.accessToken
+                        val refreshToken = loginResponse.refreshToken
+                        Log.d("LoginViewModel", "Login successful: Access Token: $accessToken")
+                        onSuccess(accessToken, refreshToken)
                     } ?: run {
                         Log.e("LoginViewModel", "Login failed: Response body is null")
                         onError("Login failed: Response body is null")
