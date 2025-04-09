@@ -1,7 +1,5 @@
 package com.example.pertamaxify.ui.song
 
-import android.graphics.Bitmap
-import android.net.Uri
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,18 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.model.Song
-import androidx.compose.foundation.Image
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
-import org.jetbrains.annotations.Async
 
 @Composable
 fun LocalImageFromDownloads(fileName: String) {
-    val context = LocalContext.current
 
     AsyncImage(
         model = fileName.toUri(),
