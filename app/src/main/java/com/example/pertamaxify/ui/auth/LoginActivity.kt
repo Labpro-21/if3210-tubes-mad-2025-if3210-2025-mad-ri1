@@ -2,7 +2,6 @@ package com.example.pertamaxify.ui.auth
 
 import android.Manifest
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -25,28 +24,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.ui.main.HomeActivity
@@ -67,9 +66,13 @@ class LoginActivity : ComponentActivity() {
             PertamaxifyTheme {
                 LoginPage { email, password ->
                     viewModel.login(email, password,
-                        onSuccess = { token ->
-                            SecurePrefs.saveTokens(this, token, "")
-                            Log.d("LoginActivity", "Login Successful! Token: $token")
+                        onSuccess = { accessToken, refreshToken ->
+                            SecurePrefs.saveTokens(
+                                this,
+                                accessToken,
+                                refreshToken
+                            )
+                            Log.d("LoginActivity", "Login Successful! Access Token: $accessToken")
                             navigateToHome()
                         },
                         onError = { error ->
@@ -95,15 +98,14 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
         Manifest.permission.READ_MEDIA_AUDIO
         Manifest.permission.READ_MEDIA_VIDEO
         Manifest.permission.READ_MEDIA_IMAGES
-    }
-    else
-        Manifest.permission.READ_EXTERNAL_STORAGE
+    } else Manifest.permission.READ_EXTERNAL_STORAGE
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (!granted) {
-            Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted) {
+                Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
+            }
         }
-    }
 
     LaunchedEffect(Unit) {
         launcher.launch(permission)
@@ -127,14 +129,12 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
                 .height(700.dp)
         ) {
 
-            // Logo Image
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "App Logo",
                 modifier = Modifier.size(120.dp)
             )
 
-            // Text Below Logo
             Text(
                 text = "Millions of Songs.\nOnly on Purritify.",
                 style = Typography.displayMedium,
@@ -145,12 +145,10 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Email Input Field
             TextFieldWithLabel("Email", email, onValueChange = { email = it })
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Password Input Field
             TextFieldWithLabel(
                 label = "Password",
                 text = password,
@@ -162,7 +160,6 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Login Button
             Button(
                 onClick = { onLoginClick(email, password) },
                 modifier = Modifier
