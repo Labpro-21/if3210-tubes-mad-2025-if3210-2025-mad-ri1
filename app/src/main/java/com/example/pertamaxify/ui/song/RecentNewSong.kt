@@ -1,5 +1,6 @@
 package com.example.pertamaxify.ui.song
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,10 +14,11 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.model.Song
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
+import com.example.pertamaxify.ui.theme.Typography
+import com.example.pertamaxify.ui.theme.WhiteText
 
 @Composable
-fun LocalImageFromDownloads(fileName: String) {
-
+fun LocalExternalImage(fileName: String) {
     AsyncImage(
         model = fileName.toUri(),
         contentDescription = null,
@@ -26,36 +28,42 @@ fun LocalImageFromDownloads(fileName: String) {
 }
 
 @Composable
-fun NewSongsSection(songs: List<Song>) {
+fun NewSongsSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text("New songs", style = MaterialTheme.typography.titleLarge, color = Color.White)
+        Text("New songs", style = Typography.displayLarge, color = WhiteText)
         LazyRow {
             items(songs) { song ->
                 Column(
                     modifier = Modifier
                         .width(140.dp)
                         .padding(8.dp)
+                        .clickable { onSongClick(song) } // clickable here
                 ) {
-                    LocalImageFromDownloads(song.image)
-                    Text(song.title, color = Color.White, maxLines = 1)
-                    Text(song.image, color = Color.Gray, maxLines = 6)
+                    LocalExternalImage(song.image)
+                    Text(song.title, color = WhiteText, maxLines = 1)
+                    Text(song.singer, color = Color.Gray, maxLines = 1)
                 }
             }
         }
     }
 }
 
+
 @Composable
 fun RecentlyPlayedSection(songs: List<Song>) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text("Recently played", style = MaterialTheme.typography.titleLarge, color = Color.White)
+        Text("Recently played", style = MaterialTheme.typography.titleLarge, color = WhiteText)
         Column {
             songs.forEach { song ->
-                Row(modifier = Modifier.padding(vertical = 8.dp).horizontalScroll(rememberScrollState())) {
-                    LocalImageFromDownloads(song.image)
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .horizontalScroll(rememberScrollState())
+                ) {
+                    LocalExternalImage(song.image)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(song.title, color = Color.White)
+                        Text(song.title, color = WhiteText)
                         Text(song.singer, color = Color.Gray)
                     }
                 }

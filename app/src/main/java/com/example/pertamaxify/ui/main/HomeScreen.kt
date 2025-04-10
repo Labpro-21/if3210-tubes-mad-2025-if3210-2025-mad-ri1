@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.JwtPayload
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.song.NewSongsSection
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.ui.theme.WhiteText
@@ -22,12 +23,13 @@ fun HomeScreen() {
     val context = LocalContext.current
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
+    var selectedSong by remember { mutableStateOf<Song?>(null) }
 
     // Dummy data
     val newSongs = remember {
         listOf(
-            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000035", "https://actions.google.com/sounds/v1/ambiences/barnyard_with_animals.ogg"),
-            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000033", "..."),
+            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000033", "content://media/external/file/1000000035"),
+            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000034", "..."),
             Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
             Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
         )
@@ -48,6 +50,23 @@ fun HomeScreen() {
         decodedPayload.value = JwtUtils.decodeJwt(token.value)
     }
 
+
+    // If a song is selected, show the music player screen
+    selectedSong?.let { song ->
+        MusicPlayerScreen(song = song) {
+            selectedSong = null // go back when back button pressed
+        }
+        return // Skip the rest of HomeScreen UI
+    }
+
+    // If a song is selected, show the music player screen
+    selectedSong?.let { song ->
+        MusicPlayerScreen(song = song) {
+            selectedSong = null // go back when back button pressed
+        }
+        return // Skip the rest of HomeScreen UI
+    }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
         rememberScrollState()
     )) {
@@ -66,7 +85,10 @@ fun HomeScreen() {
         } ?: Text(text = "Failed to decode JWT", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
 
         Spacer(modifier = Modifier.height(24.dp))
-        NewSongsSection(songs = newSongs)
+
+        NewSongsSection(songs = newSongs, onSongClick = { song ->
+            selectedSong = song
+        })
         Spacer(modifier = Modifier.height(24.dp))
         RecentlyPlayedSection(songs = recentlyPlayed)
     }

@@ -94,21 +94,27 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun LoginPage(onLoginClick: (String, String) -> Unit) {
     val context = LocalContext.current
-    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        Manifest.permission.READ_MEDIA_AUDIO
-        Manifest.permission.READ_MEDIA_VIDEO
-        Manifest.permission.READ_MEDIA_IMAGES
-    } else Manifest.permission.READ_EXTERNAL_STORAGE
+    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.READ_MEDIA_VIDEO,
+            Manifest.permission.READ_MEDIA_IMAGES
+        )
+    } else {
+        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
 
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (!granted) {
-                Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
-            }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissionsMap ->
+        val denied = permissionsMap.filterValues { !it }
+        if (denied.isNotEmpty()) {
+            Toast.makeText(context, "Permission denied: ${denied.keys.joinToString()}", Toast.LENGTH_SHORT).show()
         }
+    }
 
     LaunchedEffect(Unit) {
-        launcher.launch(permission)
+        launcher.launch(permissions)
     }
 
     var email by remember { mutableStateOf("") }
