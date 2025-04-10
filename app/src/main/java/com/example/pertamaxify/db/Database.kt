@@ -17,4 +17,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
     abstract fun userDao(): UserDao
     abstract fun likedSongDao(): LikedSongDao
+    abstract fun playedSongUser(): PlayedSongUserDao
 }
