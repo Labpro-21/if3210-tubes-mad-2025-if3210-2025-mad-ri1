@@ -7,14 +7,22 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.work.*
 import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.db.AppDatabase
+import com.example.pertamaxify.db.DatabaseSeeder
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.main.HomeActivity
 import com.example.pertamaxify.ui.splash.SplashScreenActivity
 import com.example.pertamaxify.utils.JwtUtils
 import com.example.pertamaxify.workers.TokenRefreshWorker
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var database: AppDatabase
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -41,7 +49,9 @@ class MainActivity : ComponentActivity() {
 
             if (jwtPayload != null && jwtPayload.exp > currentTime) {
                 Log.d("MainActivity", "Token Found.")
-                openHomeScreen()
+                DatabaseSeeder.seedSong(applicationContext, database) {
+                    openHomeScreen()
+                }
                 return
             }
 
@@ -49,7 +59,9 @@ class MainActivity : ComponentActivity() {
         }
 
         Log.d("MainActivity", "No Token Found.")
-        openLoginScreen()
+        DatabaseSeeder.seedSong(applicationContext, database) {
+            openLoginScreen()
+        }
     }
 
     private fun startTokenRefreshWorker() {
