@@ -29,11 +29,11 @@ fun formatDuration(ms: Long): String {
 
 
 @Composable
-fun MusicPlayerScreen(song: Song, onBack: () -> Unit = {}) {
+fun MusicPlayerScreen(song: Song) {
     val context = LocalContext.current
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(song.audio)
+            val mediaItem = MediaItem.fromUri(song.audioPath)
             setMediaItem(mediaItem)
             prepare()
             playWhenReady = true
@@ -64,7 +64,7 @@ fun MusicPlayerScreen(song: Song, onBack: () -> Unit = {}) {
             .padding(16.dp)
     ) {
         AsyncImage(
-            model = song.image,
+            model = song.imagePath,
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()

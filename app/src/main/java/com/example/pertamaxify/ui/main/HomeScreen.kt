@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.JwtPayload
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.player.MusicPlayerScreen
@@ -17,9 +18,10 @@ import com.example.pertamaxify.ui.song.NewSongsSection
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.ui.theme.WhiteText
 import com.example.pertamaxify.utils.JwtUtils
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
@@ -35,16 +37,6 @@ fun HomeScreen() {
         )
     }
 
-    val recentlyPlayed = remember {
-        listOf(
-            Song("Jazz is for ordinary people", "berlioz", "Sickboy Chainsmoker.png", "..."),
-            Song("Loose", "Daniel Caesar", "Sickboy Chainsmoker.png", "..."),
-            Song("Nights", "Frank Ocean", "Sickboy Chainsmoker.png", "..."),
-            Song("Kiss of Life", "Sade", "Sickboy Chainsmoker.png", "..."),
-            Song("BEST INTEREST", "Tyler, The Creator", "Sickboy Chainsmoker.png", "...")
-        )
-    }
-
     LaunchedEffect(Unit) {
         token.value = SecurePrefs.getAccessToken(context) ?: "No token found"
         decodedPayload.value = JwtUtils.decodeJwt(token.value)
@@ -53,17 +45,13 @@ fun HomeScreen() {
 
     // If a song is selected, show the music player screen
     selectedSong?.let { song ->
-        MusicPlayerScreen(song = song) {
-            selectedSong = null // go back when back button pressed
-        }
+        MusicPlayerScreen(song = song)
         return // Skip the rest of HomeScreen UI
     }
 
     // If a song is selected, show the music player screen
     selectedSong?.let { song ->
-        MusicPlayerScreen(song = song) {
-            selectedSong = null // go back when back button pressed
-        }
+        MusicPlayerScreen(song = song)
         return // Skip the rest of HomeScreen UI
     }
 
@@ -90,6 +78,6 @@ fun HomeScreen() {
             selectedSong = song
         })
         Spacer(modifier = Modifier.height(24.dp))
-        RecentlyPlayedSection(songs = recentlyPlayed)
+        RecentlyPlayedSection(songs = viewModel.recentlyPlayedSongs)
     }
 }

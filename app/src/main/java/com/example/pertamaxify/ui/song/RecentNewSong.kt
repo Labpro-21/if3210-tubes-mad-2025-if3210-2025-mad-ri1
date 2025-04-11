@@ -39,7 +39,7 @@ fun NewSongsSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
                         .padding(8.dp)
                         .clickable { onSongClick(song) } // clickable here
                 ) {
-                    LocalExternalImage(song.image)
+                    LocalExternalImage(song.imagePath)
                     Text(song.title, color = WhiteText, maxLines = 1)
                     Text(song.singer, color = Color.Gray, maxLines = 1)
                 }
@@ -60,7 +60,7 @@ fun RecentlyPlayedSection(songs: List<Song>) {
                         .padding(vertical = 8.dp)
                         .horizontalScroll(rememberScrollState())
                 ) {
-                    LocalExternalImage(song.image)
+                    LocalExternalImage(song.imagePath)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(song.title, color = WhiteText)
