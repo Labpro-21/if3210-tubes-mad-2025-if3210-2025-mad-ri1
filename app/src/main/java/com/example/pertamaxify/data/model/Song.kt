@@ -9,9 +9,9 @@ data class Song(
     val singer: String,
     val imagePath: String, // Image path
     val audioPath: String, // Audio path
-    val addedBy: String, // Email of user who added this song
-    val lastPlayed: String, // Date when this song last played by the user added it
-    val isLiked: Boolean, // is the song liked by user who added it
+    val addedBy: String? = null, // Email of user who added this song
+    val lastPlayed: String? = null, // Date when this song last played by the user added it
+    val isLiked: Boolean? = false, // is the song liked by user who added it
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
