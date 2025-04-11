@@ -3,12 +3,15 @@ package com.example.pertamaxify.data.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(tableName = "song")
 data class Song(
     val title: String,
     val singer: String,
-    val image: String, // Image path
-    val audio: String, // Audio path
+    val imagePath: String, // Image path
+    val audioPath: String, // Audio path
+    val addedBy: String, // Email of user who added this song
+    val lastPlayed: String, // Date when this song last played by the user added it
+    val isLiked: Boolean, // is the song liked by user who added it
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0

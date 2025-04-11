@@ -3,10 +3,10 @@ package com.example.pertamaxify.data.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity(tableName = "user")
 data class User(
     val name: String,
-
+    val imageProfile: String?,
     @PrimaryKey
-    val email: String
+    val email: String,
 )

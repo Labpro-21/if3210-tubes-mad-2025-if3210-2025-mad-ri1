@@ -8,10 +8,10 @@ import com.example.pertamaxify.data.model.Song
 
 @Dao
 interface SongDao {
-    @Query("SELECT * FROM Song")
+    @Query("SELECT * FROM song")
     fun getAllSong() : List<Song>
 
-    @Query("SELECT * FROM Song WHERE title LIKE :title")
+    @Query("SELECT * FROM song WHERE title LIKE :title")
     fun getSongByTitle(title: String): List<Song>
 
     @Query("SELECT * FROM song WHERE title LIKE :title LIMIT 1")

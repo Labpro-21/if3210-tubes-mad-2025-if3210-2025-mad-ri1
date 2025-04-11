@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -68,6 +70,17 @@ dependencies {
     // optional - Test helpers
     testImplementation(libs.androidx.room.testing)
 
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    implementation(libs.hilt.android.v2511)
+    kapt(libs.hilt.android.compiler)
+    // Kotlin Coroutines
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+
     // optional - Paging 3 Integration
     implementation(libs.androidx.room.paging)
     implementation(libs.androidx.media3.exoplayer)
@@ -98,4 +111,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
 }
