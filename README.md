@@ -51,7 +51,11 @@
 
 ## About The Project
 
-General Explanation about the project, Why you made this, What does it do exactly.
+Purritify is a music app themed around Perry the Platypus. It's an app made to explore the in's and out's of Mobile development. 
+It's made in Android Studio IDE and the native kotlin language (as if in native android not the cross platform). 
+The app itself is inspired by the popular Spotify mobile app. For the backend itself (Server) is not included in this project but provided to us instead.
+
+
 
 <!-- OPTIONAL LINK OR REFERENCE -->
 <!-- <p align="center">
