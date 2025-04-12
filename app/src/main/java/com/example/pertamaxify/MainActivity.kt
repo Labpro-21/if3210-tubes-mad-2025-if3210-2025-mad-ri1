@@ -43,10 +43,15 @@ class MainActivity : ComponentActivity() {
 
         // Show splash screen only for API 29 & 30
         if (Build.VERSION.SDK_INT in 29..30) {
+            DatabaseSeeder.seedSong(applicationContext, database) {
+
             startActivity(Intent(this, SplashScreenActivity::class.java))
             finish()
+            }
         } else {
-            checkAuthentication()
+            DatabaseSeeder.seedSong(applicationContext, database) {
+                checkAuthentication()
+            }
         }
     }
 
