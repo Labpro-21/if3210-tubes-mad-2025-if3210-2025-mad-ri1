@@ -1,6 +1,8 @@
 package com.example.pertamaxify.ui.library
 
+import android.content.ContentUris
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,17 +36,21 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.AddSongModel
+import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.ui.song.UploadBox
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
+import androidx.core.net.toUri
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddSongDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String) -> Unit,
+    onSave: (String, String, String, String, String?) -> Unit,
 ) {
+    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+
     var title by remember { mutableStateOf("") }
     var artist by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<String?>(null) }
@@ -134,8 +140,30 @@ fun AddSongDialog(
                         onClick = {
                             if (title.isNotBlank() && artist.isNotBlank() &&
                                 imageUri != null && audioUri != null) {
+                                // Parse the imageUri and audioUri to uri
+//                                val uriImage = imageUri!!.toUri()
+//                                val uriAudio = audioUri!!.toUri()
+//
+//                                // Get the ID of image and audio
+//
+//                                val imageId = ContentUris.parseId(uriImage)
+//
+//                                val standardImageUri = ContentUris.withAppendedId(
+//                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                                    imageId
+//                                )
+//                                val audioId = ContentUris.parseId(uriAudio)
+//                                val standardAudioUri = ContentUris.withAppendedId(
+//                                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//                                    audioId
+//                                )
+                                val imageId = imageUri!!.takeLast(10)
+                                val audioId = audioUri!!.takeLast(10)
+
+                                val basePath = "content://media/external/"
+
                                 Log.d("URI:", "Image: $imageUri, Audio: $audioUri")
-                                onSave(title, artist, imageUri!!, audioUri!!)
+                                onSave(title, artist, "$basePath$imageId", "$basePath$audioId", profile?.email)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),

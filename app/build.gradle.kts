@@ -82,6 +82,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(libs.androidx.datastore.preferences)
+
 
     // optional - Paging 3 Integration
     implementation(libs.androidx.room.paging)
@@ -113,6 +115,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    ksp(libs.room.compiler)
+    implementation(libs.room.ktx)
 
     // Android fragment
     implementation(libs.androidx.fragment.ktx)

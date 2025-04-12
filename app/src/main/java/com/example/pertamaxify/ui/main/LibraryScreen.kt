@@ -14,29 +14,38 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.R
+import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.LibraryViewModel
+import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.library.LibraryFragment
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
 
-@Preview
 @Composable
 fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     var showDialog by remember { mutableStateOf(false) }
+    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+
+    Log.d("Profile", "User email: ${profile?.email}")
 
     Column(
         modifier = Modifier
@@ -67,13 +76,14 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         if (showDialog) {
             AddSongDialog(
                 onDismiss = { showDialog = false },
-                onSave = { title, artist, imagePath, audioPath ->
+                onSave = { title, artist, imagePath, audioPath, email  ->
                     viewModel.saveSong(
                         Song(
                             title = title,
                             singer = artist,
                             imagePath = imagePath,
-                            audioPath = audioPath
+                            audioPath = audioPath,
+                            addedBy = email,
                         )
                     )
                     showDialog = false
