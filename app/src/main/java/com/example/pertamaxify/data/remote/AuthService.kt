@@ -20,6 +20,6 @@ interface AuthService {
     @GET("/api/verify-token")
     suspend fun verifyToken(@Header("Authorization") token: String): Response<Unit>
 
-    @GET("/api/profil")
+    @GET("/api/profile")
     suspend fun getProfile(@Header("Authorization") token: String): Response<ProfileResponse>
 }
