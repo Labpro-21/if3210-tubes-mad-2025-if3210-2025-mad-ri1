@@ -67,16 +67,23 @@ class LoginActivity : ComponentActivity() {
 
                 LoginPage(
                     errorMessage = errorMessage,
-                    onLoginClick = { email, password ->
+                    onLoginClick = { username, password ->
                         if (isConnected) {
-                            viewModel.login(
-                                this,
-                                email, password,
-                                onSuccess = { accessToken, refreshToken ->
-                                    SecurePrefs.saveTokens(this, accessToken, refreshToken)
-                                    navigateToHome()
-                                }
-                            )
+                            if (username == "guest") {
+                                // Guest login triggered
+                                Log.d("LoginActivity", "Logging in as guest")
+                                navigateToHome()
+                            } else {
+                                // Normal login
+                                viewModel.login(
+                                    this,
+                                    username, password,
+                                    onSuccess = { accessToken, refreshToken ->
+                                        SecurePrefs.saveTokens(this, accessToken, refreshToken)
+                                        navigateToHome()
+                                    }
+                                )
+                            }
                         } else {
                             Log.d("LoginActivity", "No connection, logging in offline")
                             navigateToHome()
@@ -94,12 +101,13 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun LoginPage(
     errorMessage: String?,
     onLoginClick: (String, String) -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -133,7 +141,7 @@ fun LoginPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            TextFieldWithLabel("Email", email, onValueChange = { email = it })
+            TextFieldWithLabel("Username", username, onValueChange = { username = it })
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -149,7 +157,7 @@ fun LoginPage(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { onLoginClick(email, password) },
+                onClick = { onLoginClick(username, password) },
                 modifier = Modifier
                     .width(327.dp)
                     .height(44.dp),
@@ -161,7 +169,6 @@ fun LoginPage(
             ) {
                 Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
             }
-
 
             errorMessage?.let {
                 Spacer(modifier = Modifier.height(16.dp))
@@ -176,29 +183,24 @@ fun LoginPage(
                 )
             }
 
-//            if (!isConnected) { TODO: fix this
-//                Spacer(modifier = Modifier.height(16.dp))
-//                Text(
-//                    text = "No Connection Detected",
-//                    color = WhiteText,
-//                    style = Typography.bodyMedium,
-//                    modifier = Modifier.padding(top = 8.dp)
-//                )
-//
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    onClick = { onLoginClick(email, password) },
-                    modifier = Modifier.width(327.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = InputBorder,
-                        contentColor = WhiteText
-                    ),
-                    shape = RoundedCornerShape(48.dp)
-                ) {
-                    Text(text = "Login Guess", color = WhiteText, style = Typography.titleMedium)
-                }
-//            }
+            Button(
+                onClick = {
+                    onLoginClick(
+                        "guest",
+                        ""
+                    )
+                },  // Trigger login as guest (with empty password)
+                modifier = Modifier.width(327.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = InputBorder,
+                    contentColor = WhiteText
+                ),
+                shape = RoundedCornerShape(48.dp)
+            ) {
+                Text(text = "Login as Guest", color = WhiteText, style = Typography.titleMedium)
+            }
         }
     }
 }
