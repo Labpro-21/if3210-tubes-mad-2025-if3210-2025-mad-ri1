@@ -12,13 +12,14 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.db.AppDatabase
 import com.example.pertamaxify.db.DatabaseSeeder
-import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.main.HomeActivity
 import com.example.pertamaxify.ui.splash.SplashScreenActivity
 import com.example.pertamaxify.utils.JwtUtils
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.workers.TokenRefreshWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check for network connection
+        if (!NetworkUtils.isNetworkConnected(this)) {
+            // Log the network issue and go to login screen
+            Log.e("MainActivity", "No internet connection. Redirecting to login.")
+            openLoginScreen()
+            return
+        }
 
         // Start the background worker
         startTokenRefreshWorker()

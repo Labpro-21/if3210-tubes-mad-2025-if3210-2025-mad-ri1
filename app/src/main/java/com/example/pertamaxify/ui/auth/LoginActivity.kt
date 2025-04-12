@@ -1,15 +1,10 @@
 package com.example.pertamaxify.ui.auth
 
-import android.Manifest
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,14 +29,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -60,26 +55,34 @@ import com.example.pertamaxify.ui.theme.WhiteText
 class LoginActivity : ComponentActivity() {
     private val viewModel: LoginViewModel by viewModels()
 
+    private var isConnected by mutableStateOf(true)
+    private var errorMessage by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PertamaxifyTheme {
-                LoginPage { email, password ->
-                    viewModel.login(email, password,
-                        onSuccess = { accessToken, refreshToken ->
-                            SecurePrefs.saveTokens(
+                // Observe error message from ViewModel
+                errorMessage = viewModel.errorMessage
+
+                LoginPage(
+                    errorMessage = errorMessage,
+                    onLoginClick = { email, password ->
+                        if (isConnected) {
+                            viewModel.login(
                                 this,
-                                accessToken,
-                                refreshToken
+                                email, password,
+                                onSuccess = { accessToken, refreshToken ->
+                                    SecurePrefs.saveTokens(this, accessToken, refreshToken)
+                                    navigateToHome()
+                                }
                             )
-                            Log.d("LoginActivity", "Login Successful! Access Token: $accessToken")
+                        } else {
+                            Log.d("LoginActivity", "No connection, logging in offline")
                             navigateToHome()
-                        },
-                        onError = { error ->
-                            Log.e("LoginActivity", "Login Failed: $error")
                         }
-                    )
-                }
+                    }
+                )
             }
         }
     }
@@ -92,31 +95,10 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginPage(onLoginClick: (String, String) -> Unit) {
-    val context = LocalContext.current
-    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(
-            Manifest.permission.READ_MEDIA_AUDIO,
-            Manifest.permission.READ_MEDIA_VIDEO,
-            Manifest.permission.READ_MEDIA_IMAGES
-        )
-    } else {
-        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-    }
-
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissionsMap ->
-        val denied = permissionsMap.filterValues { !it }
-        if (denied.isNotEmpty()) {
-            Toast.makeText(context, "Permission denied: ${denied.keys.joinToString()}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        launcher.launch(permissions)
-    }
-
+fun LoginPage(
+    errorMessage: String?,
+    onLoginClick: (String, String) -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -179,9 +161,48 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
             ) {
                 Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
             }
+
+
+            errorMessage?.let {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = it,
+                    color = Color.Red,
+                    style = Typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                )
+            }
+
+//            if (!isConnected) { TODO: fix this
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text(
+//                    text = "No Connection Detected",
+//                    color = WhiteText,
+//                    style = Typography.bodyMedium,
+//                    modifier = Modifier.padding(top = 8.dp)
+//                )
+//
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = { onLoginClick(email, password) },
+                    modifier = Modifier.width(327.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = InputBorder,
+                        contentColor = WhiteText
+                    ),
+                    shape = RoundedCornerShape(48.dp)
+                ) {
+                    Text(text = "Login Guess", color = WhiteText, style = Typography.titleMedium)
+                }
+//            }
         }
     }
 }
+
 
 @Composable
 fun TextFieldWithLabel(
