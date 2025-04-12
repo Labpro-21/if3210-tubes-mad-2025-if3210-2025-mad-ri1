@@ -1,6 +1,7 @@
 package com.example.pertamaxify.ui.player
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.pertamaxify.R
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
@@ -31,6 +33,7 @@ fun formatDuration(ms: Long): String {
     return "%d:%02d".format(minutes, seconds)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerScreen(
     song: Song,
@@ -102,12 +105,16 @@ fun MusicPlayerScreen(
 
             Text(
                 song.title,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                ),
                 color = WhiteText
             )
             Text(
                 song.singer,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                ),
                 color = WhiteHint
             )
 
@@ -117,7 +124,19 @@ fun MusicPlayerScreen(
                 value = currentPosition.coerceAtMost(duration).toFloat(),
                 onValueChange = { player.seekTo(it.toLong()) },
                 valueRange = 0f..(duration.takeIf { it > 0 }?.toFloat() ?: 1f),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = WhiteText,          // Circular thumb color
+                    activeTrackColor = WhiteText,    // Progress color
+                    inactiveTrackColor = WhiteHint,  // Background track color
+                ),
+                thumb = {
+                    SliderDefaults.Thumb(
+                        interactionSource = remember { MutableInteractionSource() },
+                        colors = SliderDefaults.colors(thumbColor = WhiteText),
+//                        modifier = Modifier.size(8.dp)  // Circular thumb size
+                    )
+                },
             )
 
             Row(
