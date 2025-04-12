@@ -34,6 +34,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.ui.main.HomeActivity
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.theme.GreenButton
 import com.example.pertamaxify.ui.theme.InputBackground
 import com.example.pertamaxify.ui.theme.InputBorder
@@ -60,26 +62,47 @@ import com.example.pertamaxify.ui.theme.WhiteText
 class LoginActivity : ComponentActivity() {
     private val viewModel: LoginViewModel by viewModels()
 
+    private var isConnected by mutableStateOf(true)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PertamaxifyTheme {
-                LoginPage { email, password ->
-                    viewModel.login(email, password,
-                        onSuccess = { accessToken, refreshToken ->
-                            SecurePrefs.saveTokens(
-                                this,
-                                accessToken,
-                                refreshToken
-                            )
-                            Log.d("LoginActivity", "Login Successful! Access Token: $accessToken")
-                            navigateToHome()
-                        },
-                        onError = { error ->
-                            Log.e("LoginActivity", "Login Failed: $error")
-                        }
-                    )
+                // Initialize network monitoring
+                LaunchedEffect(Unit) {
+                    NetworkUtils.registerNetworkCallback(this@LoginActivity)
                 }
+
+                // Observe the network connection state
+                NetworkUtils.isConnected.collectAsState().value.let {
+                    isConnected = it
+                }
+
+                LoginPage(
+                    isConnected = isConnected,
+                    onLoginClick = { email, password ->
+                        if (isConnected) {
+                            // Proceed with login using the network
+                            viewModel.login(
+                                email, password,
+                                onSuccess = { accessToken, refreshToken ->
+                                    SecurePrefs.saveTokens(this, accessToken, refreshToken)
+                                    Log.d(
+                                        "LoginActivity",
+                                        "Login Successful! Access Token: $accessToken"
+                                    )
+                                    navigateToHome()
+                                },
+                                onError = { error ->
+                                    Log.e("LoginActivity", "Login Failed: $error")
+                                }
+                            )
+                        } else {
+                            Log.d("LoginActivity", "No connection, logging in offline")
+                            navigateToHome()
+                        }
+                    }
+                )
             }
         }
     }
@@ -92,7 +115,10 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginPage(onLoginClick: (String, String) -> Unit) {
+fun LoginPage(
+    isConnected: Boolean,
+    onLoginClick: (String, String) -> Unit
+) {
     val context = LocalContext.current
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
@@ -109,7 +135,11 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
     ) { permissionsMap ->
         val denied = permissionsMap.filterValues { !it }
         if (denied.isNotEmpty()) {
-            Toast.makeText(context, "Permission denied: ${denied.keys.joinToString()}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Permission denied: ${denied.keys.joinToString()}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -178,6 +208,30 @@ fun LoginPage(onLoginClick: (String, String) -> Unit) {
                 shape = RoundedCornerShape(48.dp)
             ) {
                 Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
+            }
+
+            if (!isConnected) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "No Connection Detected",
+                    color = WhiteText,
+                    style = Typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { onLoginClick(email, password) },
+                    modifier = Modifier.width(327.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = InputBorder,
+                        contentColor = WhiteText
+                    ),
+                    shape = RoundedCornerShape(48.dp)
+                ) {
+                    Text(text = "Login Offline", color = WhiteText, style = Typography.titleMedium)
+                }
             }
         }
     }
