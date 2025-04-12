@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,13 +39,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.ui.auth.LoginActivity
+import com.example.pertamaxify.ui.network.NetworkUtils
+import com.example.pertamaxify.ui.network.NoConnectionScreen
 
 @Composable
 fun ProfileScreen() {
@@ -52,22 +54,38 @@ fun ProfileScreen() {
     val token = SecurePrefs.getAccessToken(context)
     var profile by remember { mutableStateOf<ProfileResponse?>(null) }
     var showDialog by remember { mutableStateOf(false) }
+    var showNoConnection by remember { mutableStateOf(false) }
 
+    val isConnected by NetworkUtils.isConnected.collectAsState()
     val client = remember { ApiClient.instance }
 
     LaunchedEffect(Unit) {
-        token?.let {
+        NetworkUtils.registerNetworkCallback(context)
+    }
+
+    LaunchedEffect(isConnected) {
+        if (profile == null && isConnected) {
             try {
-                val res = client.getProfile("Bearer $it")
-                if (res.isSuccessful) {
-                    profile = res.body()
-                } else {
-                    Log.e("ProfileScreen", "API Error: ${res.code()}")
+                token?.let {
+                    val res = client.getProfile("Bearer $it")
+                    if (res.isSuccessful) {
+                        profile = res.body()
+                        showNoConnection = false
+                    } else {
+                        Log.e("ProfileScreen", "API Error: ${res.code()}")
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ProfileScreen", "Exception: ${e.localizedMessage}")
             }
+        } else if (!isConnected && profile == null) {
+            showNoConnection = true
         }
+    }
+
+    if (showNoConnection) {
+        NoConnectionScreen()
+        return
     }
 
     Box(
@@ -77,15 +95,10 @@ fun ProfileScreen() {
                 Brush.verticalGradient(
                     colors = listOf(Color(0xFF00667B), Color(0xFF002F38), Color(0xFF101010)),
                     startY = 100f,
-                    endY = 1000f
+                    endY = 1400f
                 )
             )
-            .padding(
-                top = 80.dp,
-                start = 24.dp,
-                end = 24.dp,
-                bottom = 24.dp
-            )
+            .padding(top = 80.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -123,8 +136,7 @@ fun ProfileScreen() {
             Text(
                 text = profile?.username ?: "Username",
                 color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge
             )
 
             Text(
@@ -189,8 +201,7 @@ fun StatColumn(value: String, label: String) {
         Text(
             text = value,
             color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleMedium
         )
         Text(
             text = label,
