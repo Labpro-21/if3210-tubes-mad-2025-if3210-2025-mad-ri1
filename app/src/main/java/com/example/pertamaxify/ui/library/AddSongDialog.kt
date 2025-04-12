@@ -1,6 +1,7 @@
 package com.example.pertamaxify.ui.library
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,6 @@ import com.example.pertamaxify.ui.theme.WhiteText
 fun AddSongDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String) -> Unit,
-    viewModel: AddSongModel = hiltViewModel()
 ) {
     var title by remember { mutableStateOf("") }
     var artist by remember { mutableStateOf("") }
@@ -134,6 +134,7 @@ fun AddSongDialog(
                         onClick = {
                             if (title.isNotBlank() && artist.isNotBlank() &&
                                 imageUri != null && audioUri != null) {
+                                Log.d("URI:", "Image: $imageUri, Audio: $audioUri")
                                 onSave(title, artist, imageUri!!, audioUri!!)
                             }
                         },

@@ -36,4 +36,10 @@ object DatabaseModule {
     fun provideUserDao(database: AppDatabase): UserDao {
         return database.userDao()
     }
+
+    // Create HistoryPlayedDao instance
+    @Provides
+    fun provideHistoryPlayedDao(database: AppDatabase): HistoryPlayedDao {
+        return database.historyPlayedDao()
+    }
 }

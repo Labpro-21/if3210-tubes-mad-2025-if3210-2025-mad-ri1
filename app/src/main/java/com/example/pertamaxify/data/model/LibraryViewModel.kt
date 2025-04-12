@@ -23,11 +23,11 @@ class LibraryViewModel @Inject constructor(
     private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
     val likedSongs: StateFlow<List<Song>> = _likedSongs
 
-    init {
-        fetchAllSongs()
-        fetchLikedSongs()
-        Log.d("Songs:", allSongs.toString())
-    }
+//    init {
+//        fetchAllSongs()
+//        fetchLikedSongs()
+//        Log.d("Songs:", allSongs.toString())
+//    }
 
     fun fetchAllSongs() {
         viewModelScope.launch {
@@ -48,6 +48,12 @@ class LibraryViewModel @Inject constructor(
             // Reload both lists to reflect the change
             fetchAllSongs()
             fetchLikedSongs()
+        }
+    }
+
+    fun saveSong(song: Song) {
+        viewModelScope.launch {
+            repository.upsertSong(song)
         }
     }
 }

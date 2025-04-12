@@ -24,7 +24,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.R
+import com.example.pertamaxify.data.model.LibraryViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.library.LibraryFragment
@@ -33,7 +35,7 @@ import com.example.pertamaxify.ui.theme.WhiteText
 
 @Preview
 @Composable
-fun LibraryScreen() {
+fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -66,7 +68,14 @@ fun LibraryScreen() {
             AddSongDialog(
                 onDismiss = { showDialog = false },
                 onSave = { title, artist, imagePath, audioPath ->
-
+                    viewModel.saveSong(
+                        Song(
+                            title = title,
+                            singer = artist,
+                            imagePath = imagePath,
+                            audioPath = audioPath
+                        )
+                    )
                     showDialog = false
                 }
             )
