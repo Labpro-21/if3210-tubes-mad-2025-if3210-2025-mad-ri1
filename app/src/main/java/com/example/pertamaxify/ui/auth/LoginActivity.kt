@@ -66,11 +66,11 @@ class LoginActivity : ComponentActivity() {
                 errorMessage = viewModel.errorMessage
 
                 LoginPage(
-                    isConnected = isConnected,
                     errorMessage = errorMessage,
                     onLoginClick = { email, password ->
                         if (isConnected) {
                             viewModel.login(
+                                this,
                                 email, password,
                                 onSuccess = { accessToken, refreshToken ->
                                     SecurePrefs.saveTokens(this, accessToken, refreshToken)
@@ -96,7 +96,6 @@ class LoginActivity : ComponentActivity() {
 
 @Composable
 fun LoginPage(
-    isConnected: Boolean,
     errorMessage: String?,
     onLoginClick: (String, String) -> Unit
 ) {
@@ -177,16 +176,16 @@ fun LoginPage(
                 )
             }
 
-            if (!isConnected) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "No Connection Detected",
-                    color = WhiteText,
-                    style = Typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
+//            if (!isConnected) { TODO: fix this
+//                Spacer(modifier = Modifier.height(16.dp))
+//                Text(
+//                    text = "No Connection Detected",
+//                    color = WhiteText,
+//                    style = Typography.bodyMedium,
+//                    modifier = Modifier.padding(top = 8.dp)
+//                )
+//
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = { onLoginClick(email, password) },
@@ -197,9 +196,9 @@ fun LoginPage(
                     ),
                     shape = RoundedCornerShape(48.dp)
                 ) {
-                    Text(text = "Login Offline", color = WhiteText, style = Typography.titleMedium)
+                    Text(text = "Login Guess", color = WhiteText, style = Typography.titleMedium)
                 }
-            }
+//            }
         }
     }
 }

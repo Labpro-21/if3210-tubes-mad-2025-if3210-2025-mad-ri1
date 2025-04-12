@@ -1,5 +1,6 @@
 package com.example.pertamaxify.ui.auth
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -7,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.model.ErrorResponse
 import com.example.pertamaxify.data.remote.AuthRepository
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
@@ -14,11 +16,18 @@ class LoginViewModel(private val authRepository: AuthRepository = AuthRepository
     var errorMessage by mutableStateOf<String?>(null)
 
     fun login(
+        context: Context,
         email: String,
         password: String,
         onSuccess: (String, String) -> Unit
     ) {
         viewModelScope.launch {
+            if (!NetworkUtils.isNetworkConnected(context)) {
+                errorMessage = "No internet connection. Logging in offline."
+                onSuccess("", "")
+                return@launch
+            }
+
             try {
                 val response = authRepository.login(email, password)
                 if (response.isSuccessful) {
