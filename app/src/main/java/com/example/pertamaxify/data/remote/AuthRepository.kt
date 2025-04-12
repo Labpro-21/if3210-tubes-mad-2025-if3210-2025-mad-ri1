@@ -19,7 +19,7 @@ class AuthRepository {
 
     suspend fun verifyToken(accessToken: String): Boolean {
         val response = apiService.verifyToken("Bearer $accessToken")
-        return response.code() != 403
+        return response.code() != 401
     }
 
     suspend fun getProfile(accessToken: String): Response<ProfileResponse> {
