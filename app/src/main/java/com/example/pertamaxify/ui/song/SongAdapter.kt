@@ -1,41 +1,56 @@
-package com.example.pertamaxify.ui.song
-
+import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
+import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
+import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.ui.song.SongViewHolder
 
 class SongAdapter(
-    private val onLongClick: (Song) -> Unit
-) : RecyclerView.Adapter<SongAdapter.SongViewHolder>() {
+    private val onToggleLike: (Song) -> Unit
+) : RecyclerView.Adapter<SongViewHolder>() {
 
-    private val items = mutableListOf<Song>()
-
-    fun submitList(songs: List<Song>) {
-        items.clear()
-        items.addAll(songs)
-        notifyDataSetChanged()
-    }
-
-    class SongViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
+    private val songs = mutableListOf<Song>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
-        // Create a ComposeView programmatically
-        val composeView = ComposeView(parent.context).apply {
-            layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        return SongViewHolder(composeView)
+        val inflater = LayoutInflater.from(parent.context)
+        val view = inflater.inflate(R.layout.item_song, parent, false)
+        return SongViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
-        val song = items[position]
-        holder.composeView.setContent {
-            SongItem (song, onLongClick)
+        val song = songs[position]
+        holder.bind(song)
+
+        // Long press to show popup menu
+        holder.itemView.setOnLongClickListener { view ->
+            val popup = PopupMenu(view.context, view)
+            // If song is liked, show "Remove from Liked" or else "Add to Liked"
+            if (song.isLiked == true) {
+                popup.menu.add("Remove from Liked")
+            } else {
+                popup.menu.add("Add to Liked")
+            }
+
+            // Handle menu selection
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.title) {
+                    "Remove from Liked", "Add to Liked" -> {
+                        onToggleLike(song)
+                    }
+                }
+                true
+            }
+            popup.show()
+            true
         }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = songs.size
+
+    fun submitList(newSongs: List<Song>) {
+        songs.clear()
+        songs.addAll(newSongs)
+        notifyDataSetChanged()
+    }
 }

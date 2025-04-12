@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,20 +24,20 @@ class LibraryViewModel @Inject constructor(
     private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
     val likedSongs: StateFlow<List<Song>> = _likedSongs
 
-//    init {
-//        fetchAllSongs()
-//        fetchLikedSongs()
-//        Log.d("Songs:", allSongs.toString())
-//    }
+    init {
+        fetchAllSongs()
+        fetchLikedSongs()
+        Log.d("Songs:", allSongs.toString())
+    }
 
     fun fetchAllSongs() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _allSongs.value = repository.getAllSongs()
         }
     }
 
     fun fetchLikedSongs() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _likedSongs.value = repository.getAllLikedSongs()
         }
     }
@@ -54,6 +55,9 @@ class LibraryViewModel @Inject constructor(
     fun saveSong(song: Song) {
         viewModelScope.launch {
             repository.upsertSong(song)
+            // Refresh lists after saving
+            fetchAllSongs()
+            fetchLikedSongs()
         }
     }
 }
