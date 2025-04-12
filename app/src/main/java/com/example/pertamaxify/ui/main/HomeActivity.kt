@@ -14,7 +14,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.pertamaxify.data.model.MainViewModel
+import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.theme.PertamaxifyTheme
+import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
+import com.example.pertamaxify.data.model.ProfileResponse
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -23,16 +30,24 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PertamaxifyTheme {
-                MainScreen()
+                val viewModel: MainViewModel = hiltViewModel()
+                LaunchedEffect(Unit) {
+                    viewModel.loadLastPlayedSong()
+                }
+                MainScreen(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(viewModel: MainViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
+    val selectedSong by viewModel.selectedSong
+    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+    selectedSong?.let { Log.d("Init selected song: ", it.title + " - " + it.singer) }
 
+    Log.d("Profile", "${profile?.email}")
     Scaffold(
         bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
     ) { paddingValues ->

@@ -39,6 +39,8 @@ class MainActivity : ComponentActivity() {
         // Start the background worker
         startTokenRefreshWorker()
 
+        val temp = database.songDao()
+
         // Show splash screen only for API 29 & 30
         if (Build.VERSION.SDK_INT in 29..30) {
             startActivity(Intent(this, SplashScreenActivity::class.java))
