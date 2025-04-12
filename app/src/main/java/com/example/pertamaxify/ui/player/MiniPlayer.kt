@@ -1,6 +1,6 @@
 package com.example.pertamaxify.ui.player
 
-import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -20,7 +20,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,23 +32,165 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
 import com.example.pertamaxify.R
+import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
 import com.example.pertamaxify.ui.theme.WhiteText
+import kotlinx.coroutines.delay
 
+
+//@Composable
+//fun MiniPlayer(){
+//    var isPlaying by remember { mutableStateOf(false) }
+//    var isLiked by remember { mutableStateOf(false) }
+//    val progress = 0.4f
+//    Box (
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(12.dp)
+//            .clip(RoundedCornerShape(8.dp))
+//            .background(
+//                color = RedBackground.copy(alpha = 0.56f)
+//            )
+//    ) {
+//        Box(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(6.dp)) {
+//            Row (Modifier.align(Alignment.CenterStart)) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.logo),
+//                    contentDescription = "App Logo",
+//                    modifier = Modifier.size(50.dp)
+//                )
+//                // Song title and artist
+//                Column(Modifier.padding(horizontal = 4.dp)) {
+//                    Text(
+//                        text = "Starboy",
+//                        style = MaterialTheme.typography.titleLarge.copy(
+//                            fontWeight = FontWeight.Bold,
+//                        ),
+//                        color = WhiteText
+//                    )
+//                    Text(
+//                        text = "The Weeknd",
+//                        style = MaterialTheme.typography.bodyMedium ,
+//                        color = Color.Gray
+//                    )
+//                }
+//            }
+//
+//
+//            Row (Modifier.align(Alignment.CenterEnd)) {
+//                IconButton(
+//                    onClick = { isLiked = !isLiked },
+//                ) {
+//                    if (isLiked) {
+//                        Icon(
+//                            painter = painterResource(R.drawable.tabler_heart_filled),
+//                            contentDescription = "Liked",
+//                            tint = WhiteText,
+//                            modifier = Modifier.size(30.dp)
+//                        )
+//                    }
+//                    else {
+//                        Icon(
+//                            painter = painterResource(R.drawable.tabler_heart),
+//                            contentDescription = "Not Liked",
+//                            tint = WhiteText,
+//                            modifier = Modifier.size(30.dp)
+//                        )
+//                    }
+//                }
+//                IconButton(
+//                    onClick = { isPlaying = !isPlaying },
+//                ) {
+//                    if (isPlaying) {
+//                        Icon(
+//                            painter = painterResource(R.drawable.pause),
+//                            contentDescription = "Pause",
+//                            tint = WhiteText,
+//                            modifier = Modifier.size(30.dp)
+//                        )
+//                    }
+//                    else {
+//                        Icon(
+//                            Icons.Default.PlayArrow,
+//                            contentDescription = "Play",
+//                            tint = WhiteText,
+//                            modifier = Modifier.size(36.dp)
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//        LinearProgressIndicator(
+//            progress = { progress },
+//            color = WhiteText,
+//            trackColor = WhiteHint,
+//            gapSize = 0.dp,
+//            modifier = Modifier
+//                .padding(horizontal = 6.dp)
+//                .fillMaxWidth()
+//                .height(3.dp).align(Alignment.BottomCenter)
+//        )
+//    }
+//}
 
 @Composable
-fun MiniPlayer(){
+fun MiniPlayer(
+    song: Song?,  // Nullable to handle no song case
+    modifier: Modifier = Modifier,
+    onLikeClick: (Boolean) -> Unit = {}   // Callback for like toggle
+) {
+    // Default to empty state if no song
+    val currentSong = song ?: Song(
+        id = 0,
+        title = "No song selected",
+        singer = "",
+        imagePath = "",
+        audioPath = "",
+    )
+    val context = LocalContext.current
+    val player = remember {
+        ExoPlayer.Builder(context).build().apply {
+            val mediaItem = MediaItem.fromUri(currentSong.audioPath)
+            setMediaItem(mediaItem)
+            prepare()
+            playWhenReady = true
+        }
+    }
+
     var isPlaying by remember { mutableStateOf(false) }
     var isLiked by remember { mutableStateOf(false) }
-    val progress = 0.4f
-    Box (
-        modifier = Modifier
+    var progress by remember { mutableFloatStateOf(0f) }
+    var currentPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+
+    // Update progress when song changes
+    LaunchedEffect(currentSong) {
+        currentPosition = 0L
+        progress = 0f
+        duration = player.duration.takeIf { it > 0 } ?: duration
+        if (duration > 0L) {
+            progress = (currentPosition.toFloat() / duration.toFloat())
+                .coerceIn(0f, 1f)
+        }
+
+        while (true) {
+            currentPosition = player.currentPosition
+            duration = player.duration.takeIf { it > 0 } ?: duration
+            delay(500L)
+        }
+    }
+
+    Box(
+        modifier = modifier
             .fillMaxWidth()
             .padding(12.dp)
             .clip(RoundedCornerShape(8.dp))
@@ -54,53 +199,56 @@ fun MiniPlayer(){
             )
     ) {
         Box(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(6.dp)) {
-            Row (Modifier.align(Alignment.CenterStart)) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "App Logo",
-                    modifier = Modifier.size(50.dp)
+            Row(Modifier.align(Alignment.CenterStart)) {
+                AsyncImage(
+                    model = currentSong.imagePath,
+                    contentDescription = "Album Art",
+                    modifier = Modifier.size(50.dp).clip(RoundedCornerShape(4.dp)),
+                    placeholder = painterResource(id = R.drawable.logo)
                 )
-                // Song title and artist
+
                 Column(Modifier.padding(horizontal = 4.dp)) {
                     Text(
-                        text = "Starboy",
+                        text = currentSong.title,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                         ),
-                        color = WhiteText
+                        color = WhiteText,
+                        maxLines = 1,
                     )
                     Text(
-                        text = "The Weeknd",
-                        style = MaterialTheme.typography.bodyMedium ,
-                        color = Color.Gray
+                        text = currentSong.singer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        maxLines = 1,
                     )
                 }
             }
 
-
-            Row (Modifier.align(Alignment.CenterEnd)) {
+            Row(Modifier.align(Alignment.CenterEnd)) {
                 IconButton(
-                    onClick = { isLiked = !isLiked },
+                    onClick = {
+                        isLiked = !isLiked
+                        onLikeClick(isLiked)
+                    },
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    if (isLiked) {
-                        Icon(
-                            painter = painterResource(R.drawable.tabler_heart_filled),
-                            contentDescription = "Liked",
-                            tint = WhiteText,
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
-                    else {
-                        Icon(
-                            painter = painterResource(R.drawable.tabler_heart),
-                            contentDescription = "Not Liked",
-                            tint = WhiteText,
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(
+                            if (isLiked) R.drawable.tabler_heart_filled
+                            else R.drawable.tabler_heart
+                        ),
+                        contentDescription = if (isLiked) "Liked" else "Not Liked",
+                        tint = WhiteText
+                    )
                 }
+
                 IconButton(
-                    onClick = { isPlaying = !isPlaying },
+                    onClick = {
+                        isPlaying = !isPlaying
+                        if (isPlaying) player.play() else player.pause()
+                    },
+                    modifier = Modifier.size(40.dp)
                 ) {
                     if (isPlaying) {
                         Icon(
@@ -121,21 +269,22 @@ fun MiniPlayer(){
                 }
             }
         }
+
         LinearProgressIndicator(
             progress = { progress },
             color = WhiteText,
             trackColor = WhiteHint,
-            gapSize = 0.dp,
             modifier = Modifier
                 .padding(horizontal = 6.dp)
                 .fillMaxWidth()
-                .height(3.dp).align(Alignment.BottomCenter)
+                .height(3.dp)
+                .align(Alignment.BottomCenter)
         )
     }
 }
 
-@Preview
-@Composable
-fun MiniPlayerPreview() {
-    MiniPlayer()
-}
+//@Preview
+//@Composable
+//fun MiniPlayerPreview() {
+//    MiniPlayer()
+//}

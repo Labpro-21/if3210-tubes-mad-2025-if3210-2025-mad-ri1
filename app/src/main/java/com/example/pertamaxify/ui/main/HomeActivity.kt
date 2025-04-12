@@ -22,6 +22,7 @@ import com.example.pertamaxify.ui.theme.PertamaxifyTheme
 import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
 import com.example.pertamaxify.data.model.ProfileResponse
+import com.example.pertamaxify.ui.player.MiniPlayer
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -67,14 +68,24 @@ fun MainScreen(viewModel: MainViewModel) {
                 2 -> ProfileScreen()
             }
 
-            // Player overlay (appears when song changes)
-            if (isPlayerVisible && selectedSong != null) {
-                MusicPlayerScreen(
-                    song = selectedSong!!,
-                    onDismiss = { viewModel.dismissPlayer() },
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
+
+            if (selectedSong != null){
+                if (isPlayerVisible) {
+                    // Show Music Player
+                    MusicPlayerScreen(
+                        song = selectedSong!!,
+                        onDismiss = { viewModel.dismissPlayer() },
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                } else {
+                    // Show Mini Player
+                    MiniPlayer(
+                        song = selectedSong!!,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                }
             }
+
         }
     }
 }
