@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
 
             if (jwtPayload != null && jwtPayload.exp > currentTime) {
                 Log.d("MainActivity", "Token Found.")
+                // Seed
                 DatabaseSeeder.seedSong(applicationContext, database) {
                     openHomeScreen()
                 }
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
         }
 
         Log.d("MainActivity", "No Token Found.")
+        // Seed
         DatabaseSeeder.seedSong(applicationContext, database) {
             openLoginScreen()
         }

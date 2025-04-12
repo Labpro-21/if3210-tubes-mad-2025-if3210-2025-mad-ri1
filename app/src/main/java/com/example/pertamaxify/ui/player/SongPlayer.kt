@@ -102,7 +102,7 @@ fun MusicPlayerScreen(song: Song) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* prev song logic */ }) {
+            IconButton(onClick = { /* prev song */ }) {
                 Icon(
                     painter = painterResource((R.drawable.skip_prev)),
                     contentDescription = null, tint = WhiteText,

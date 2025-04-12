@@ -19,7 +19,7 @@ class HomeViewModel @Inject constructor(
     private val songRepository: SongRepository
 ) : ViewModel() {
 
-    // State holder for the list of recently played songs fetched from the DB.
+    // List of recently played songs
     var recentlyPlayedSongs by mutableStateOf<List<Song>>(emptyList())
         private set
 
@@ -29,7 +29,6 @@ class HomeViewModel @Inject constructor(
 
     private fun fetchSongs() {
         viewModelScope.launch {
-            // Query the database on a background thread.
             val songs = withContext(Dispatchers.IO) {
                 songRepository.getAllSongs()
             }

@@ -25,13 +25,13 @@ object DatabaseModule {
             .build()
     }
 
-    // Provide the SongDao
+    // Create SongDao instance
     @Provides
     fun provideSongDao(database: AppDatabase): SongDao {
         return database.songDao()
     }
 
-    // Provide the UserDao
+    // Create UserDao instance
     @Provides
     fun provideUserDao(database: AppDatabase): UserDao {
         return database.userDao()

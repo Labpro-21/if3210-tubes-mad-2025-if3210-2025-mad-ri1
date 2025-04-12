@@ -43,16 +43,10 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     }
 
 
-    // If a song is selected, show the music player screen
+    // Show player when a song is clicked
     selectedSong?.let { song ->
         MusicPlayerScreen(song = song)
-        return // Skip the rest of HomeScreen UI
-    }
-
-    // If a song is selected, show the music player screen
-    selectedSong?.let { song ->
-        MusicPlayerScreen(song = song)
-        return // Skip the rest of HomeScreen UI
+        return
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(

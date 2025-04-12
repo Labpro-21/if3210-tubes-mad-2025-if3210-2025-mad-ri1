@@ -25,7 +25,7 @@ object DatabaseSeeder {
         CoroutineScope(Dispatchers.IO).launch {
             Log.d("DatabaseSeeder", "Seeding database...")
 
-            // Force open database by doing a dummy call
+            // Force open database by call random func
             database.songDao().getAllSong()
 
             val seedSongs = listOf(
