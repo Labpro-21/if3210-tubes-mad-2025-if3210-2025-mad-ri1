@@ -28,9 +28,9 @@ class HomeViewModel @Inject constructor(
     private fun fetchSongs() {
         viewModelScope.launch {
             val songs = withContext(Dispatchers.IO) {
-                songRepository.getAllSongs()
+//                songRepository.getAllSongs()
             }
-            recentlyPlayedSongs = songs
+//            recentlyPlayedSongs = songs
         }
     }
 }
