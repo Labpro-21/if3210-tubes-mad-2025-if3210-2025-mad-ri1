@@ -28,6 +28,16 @@ fun HomeScreen(
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
 
+    var showDialog by remember { mutableStateOf(false) }
+    val accessToken = SecurePrefs.getAccessToken(context)
+    val username: String?
+    if (!accessToken.isNullOrEmpty()) {
+        val jwtPayload = JwtUtils.decodeJwt(accessToken)
+        username = jwtPayload?.username ?: ""
+    } else {
+        username = ""
+    }
+
     // Dummy data
     val newSongs = remember {
         listOf(
