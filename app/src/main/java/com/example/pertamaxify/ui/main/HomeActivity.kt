@@ -44,10 +44,9 @@ class HomeActivity : ComponentActivity() {
 fun MainScreen(viewModel: MainViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
     val selectedSong by viewModel.selectedSong
-    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+    val isPlayerVisible by viewModel.isPlayerVisible
     selectedSong?.let { Log.d("Init selected song: ", it.title + " - " + it.singer) }
 
-    Log.d("Profile", "${profile?.email}")
     Scaffold(
         bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
     ) { paddingValues ->
@@ -58,9 +57,23 @@ fun MainScreen(viewModel: MainViewModel) {
             contentAlignment = Alignment.Center
         ) {
             when (selectedTab) {
-                0 -> HomeScreen()
+                0 -> HomeScreen(
+                    selectedSong = selectedSong,
+                    onSongSelected = { newSong ->
+                        viewModel.updateSelectedSong(newSong)
+                    }
+                )
                 1 -> LibraryScreen()
                 2 -> ProfileScreen()
+            }
+
+            // Player overlay (appears when song changes)
+            if (isPlayerVisible && selectedSong != null) {
+                MusicPlayerScreen(
+                    song = selectedSong!!,
+                    onDismiss = { viewModel.dismissPlayer() },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }

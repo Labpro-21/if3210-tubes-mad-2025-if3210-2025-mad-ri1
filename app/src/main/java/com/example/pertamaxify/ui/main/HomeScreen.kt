@@ -15,13 +15,18 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.utils.JwtUtils
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.pertamaxify.ui.player.MusicPlayerScreen
+import com.example.pertamaxify.ui.song.NewSongsSection
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    selectedSong: Song?,
+    onSongSelected: (Song) -> Unit
+) {
     val context = LocalContext.current
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
-    var selectedSong by remember { mutableStateOf<Song?>(null) }
 
     // Dummy data
     val newSongs = remember {
@@ -38,7 +43,6 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
         decodedPayload.value = JwtUtils.decodeJwt(token.value)
     }
 
-
 //    // Show player when a song is clicked
 //    selectedSong?.let { song ->
 //        MusicPlayerScreen(song = song)
@@ -48,9 +52,16 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
         rememberScrollState()
     ).padding(16.dp, 24.dp)) {
-//        NewSongsSection(songs = newSongs, onSongClick = { song ->
-//            selectedSong = song
-//        })
+        NewSongsSection(
+//            songs = newSongs,
+//            onSongClick = {
+//                song -> selectedSong = song
+//            }
+            songs = newSongs,
+            onSongClick = { song ->
+                onSongSelected(song)
+            }
+        )
         Spacer(modifier = Modifier.height(24.dp))
         RecentlyPlayedSection(songs = viewModel.recentlyPlayedSongs)
     }
