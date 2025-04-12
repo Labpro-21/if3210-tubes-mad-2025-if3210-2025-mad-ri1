@@ -21,6 +21,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import com.example.pertamaxify.R
+import com.example.pertamaxify.ui.theme.RedBackground
+import com.example.pertamaxify.ui.theme.WhiteHint
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -68,7 +70,7 @@ fun MusicPlayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
+                .background(RedBackground)
                 .padding(16.dp)
         ) {
             // Dismiss button at top-right
@@ -83,7 +85,7 @@ fun MusicPlayerScreen(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close player",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = WhiteText,
                     )
                 }
             }
@@ -101,12 +103,12 @@ fun MusicPlayerScreen(
             Text(
                 song.title,
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = WhiteText
             )
             Text(
                 song.singer,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = WhiteHint
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -124,11 +126,11 @@ fun MusicPlayerScreen(
             ) {
                 Text(
                     formatDuration(currentPosition),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = WhiteHint
                 )
                 Text(
                     formatDuration(duration),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = WhiteHint
                 )
             }
 
@@ -143,7 +145,7 @@ fun MusicPlayerScreen(
                     Icon(
                         painter = painterResource(R.drawable.skip_prev),
                         contentDescription = "Previous",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = WhiteText,
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -177,7 +179,7 @@ fun MusicPlayerScreen(
                     Icon(
                         painter = painterResource(R.drawable.skip_next),
                         contentDescription = "Next",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = WhiteText,
                         modifier = Modifier.size(40.dp)
                     )
                 }
