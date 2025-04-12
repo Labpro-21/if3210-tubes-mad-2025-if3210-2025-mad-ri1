@@ -12,7 +12,6 @@ import com.example.pertamaxify.data.model.Song
 class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val titleTextView = itemView.findViewById<TextView>(R.id.songTitle)
     private val singerTextView = itemView.findViewById<TextView>(R.id.songSinger)
-    val optionsButton: TextView = itemView.findViewById(R.id.optionsButton)
 
     fun bind(song: Song) {
         titleTextView.text = song.title
