@@ -11,3 +11,5 @@ val WhiteText = Color(0xFFFFFFFF)
 val WhiteHint = Color(0xB3B3B3B3)
 
 val GreenButton = Color(0xFF1DB955)
+
+val RedBackground = Color(0xFF550A1C)
