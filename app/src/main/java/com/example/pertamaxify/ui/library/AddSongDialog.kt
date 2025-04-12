@@ -36,7 +36,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.AddSongModel
-import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.ui.song.UploadBox
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
@@ -48,8 +47,8 @@ import androidx.core.net.toUri
 fun AddSongDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String, String, String?) -> Unit,
+    username: String?
 ) {
-    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
 
     var title by remember { mutableStateOf("") }
     var artist by remember { mutableStateOf("") }
@@ -163,7 +162,7 @@ fun AddSongDialog(
                                 val basePath = "content://media/external/"
 
                                 Log.d("URI:", "Image: $imageUri, Audio: $audioUri")
-                                onSave(title, artist, "$basePath$imageId", "$basePath$audioId", profile?.email)
+                                onSave(title, artist, "$basePath$imageId", "$basePath$audioId", username)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),

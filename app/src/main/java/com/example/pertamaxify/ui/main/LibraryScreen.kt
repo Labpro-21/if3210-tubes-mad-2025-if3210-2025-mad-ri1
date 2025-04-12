@@ -2,27 +2,33 @@ package com.example.pertamaxify.ui.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.LibraryViewModel
-import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.song.SongListRecyclerView
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
-import kotlinx.coroutines.flow.collect
+import com.example.pertamaxify.utils.JwtUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
+    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
-    val profile by remember { mutableStateOf<ProfileResponse?>(null) }
+    val accessToken = SecurePrefs.getAccessToken(context)
+    val username: String?
+    if (!accessToken.isNullOrEmpty()) {
+        val jwtPayload = JwtUtils.decodeJwt(accessToken)
+        username = jwtPayload?.username ?: ""
+    } else {
+        username = ""
+    }
 
     // Observe StateFlows from the VM
     val allSongs by viewModel.allSongs.collectAsState()
@@ -61,18 +67,19 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         if (showDialog) {
             AddSongDialog(
                 onDismiss = { showDialog = false },
-                onSave = { title, artist, imagePath, audioPath, email ->
+                onSave = { title, artist, imagePath, audioPath, username ->
                     viewModel.saveSong(
                         Song(
                             title = title,
                             singer = artist,
                             imagePath = imagePath,
                             audioPath = audioPath,
-                            addedBy = email
+                            addedBy = username
                         )
                     )
                     showDialog = false
-                }
+                },
+                username = username
             )
         }
 

@@ -32,4 +32,11 @@ interface SongDao {
 
     @Update
     suspend fun updateSong(song: Song)
+
+    // Specific for an user
+    @Query("SELECT * FROM song WHERE addedBy = :username")
+    fun getAllSongByUser(username: String): List<Song>
+
+    @Query("SELECT * FROM song WHERE addedBy = :username AND isLiked = 1")
+    fun getAllLikedSongByUser(username: String): List<Song>
 }
