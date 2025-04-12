@@ -1,34 +1,33 @@
 package com.example.pertamaxify.ui.auth
 
-import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.model.ErrorResponse
-import com.example.pertamaxify.data.model.LoginResponse
 import com.example.pertamaxify.data.remote.AuthRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 
 class LoginViewModel(private val authRepository: AuthRepository = AuthRepository()) : ViewModel() {
+    var errorMessage by mutableStateOf<String?>(null)
 
     fun login(
         email: String,
         password: String,
-        onSuccess: (String, String) -> Unit,
-        onError: (String) -> Unit
+        onSuccess: (String, String) -> Unit
     ) {
         viewModelScope.launch {
             try {
                 val response = authRepository.login(email, password)
                 if (response.isSuccessful) {
-                    response.body()?.let { loginResponse: LoginResponse ->
+                    response.body()?.let { loginResponse ->
                         val accessToken = loginResponse.accessToken
                         val refreshToken = loginResponse.refreshToken
-                        Log.d("LoginViewModel", "Login successful: Access Token: $accessToken")
                         onSuccess(accessToken, refreshToken)
                     } ?: run {
-                        Log.e("LoginViewModel", "Login failed: Response body is null")
-                        onError("Login failed: Response body is null")
+                        errorMessage = "Login failed: Response body is null"
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -38,13 +37,10 @@ class LoginViewModel(private val authRepository: AuthRepository = AuthRepository
                     } catch (e: Exception) {
                         "Failed to parse error response"
                     }
-                    Log.e("LoginViewModel", "Login failed: $errorMessage")
-                    onError(errorMessage)
+                    this@LoginViewModel.errorMessage = errorMessage
                 }
             } catch (e: Exception) {
-                val errorMessage = "An error occurred: ${e.message}"
-                Log.e("LoginViewModel", errorMessage, e)
-                onError(errorMessage)
+                errorMessage = "An error occurred: ${e.message}"
             }
         }
     }
