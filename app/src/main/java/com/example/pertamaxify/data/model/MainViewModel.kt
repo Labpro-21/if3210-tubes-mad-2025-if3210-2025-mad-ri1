@@ -17,8 +17,8 @@ import kotlinx.coroutines.launch
 class MainViewModel @Inject constructor(
     private val repository: HistoryPlayedRepository // Your Room DAO access
 ) : ViewModel() {
-    private val _selectedSong = mutableStateOf<Song?>(null)
-    val selectedSong: State<Song?> = _selectedSong
+    val selectedSong = mutableStateOf<Song?>(null)
+    val isPlayerVisible = mutableStateOf(false)
 
     init {
         loadLastPlayedSong()
@@ -28,10 +28,21 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) { // Use IO dispatcher for DB ops
             try {
                 val song = repository.getLastPlayed()
-                _selectedSong.value = song
+                selectedSong.value = song
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error loading last played song", e)
             }
         }
+    }
+
+    fun updateSelectedSong(song: Song) {
+        viewModelScope.launch {
+            selectedSong.value = song
+            isPlayerVisible.value = true
+        }
+    }
+
+    fun dismissPlayer() {
+        isPlayerVisible.value = false
     }
 }
