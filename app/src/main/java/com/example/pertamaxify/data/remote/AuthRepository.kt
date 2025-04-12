@@ -15,4 +15,9 @@ class AuthRepository {
     suspend fun refreshToken(refreshToken: String): Response<LoginResponse> {
         return apiService.refreshToken(RefreshTokenRequest(refreshToken))
     }
+
+    suspend fun verifyToken(accessToken: String): Boolean {
+        val response = apiService.verifyToken("Bearer $accessToken")
+        return response.code() != 403
+    }
 }

@@ -5,16 +5,26 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.work.*
+import androidx.lifecycle.lifecycleScope
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.main.HomeActivity
 import com.example.pertamaxify.ui.splash.SplashScreenActivity
 import com.example.pertamaxify.utils.JwtUtils
 import com.example.pertamaxify.workers.TokenRefreshWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
+    private val authRepository = AuthRepository()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -40,8 +50,19 @@ class MainActivity : ComponentActivity() {
             val currentTime = System.currentTimeMillis() / 1000
 
             if (jwtPayload != null && jwtPayload.exp > currentTime) {
-                Log.d("MainActivity", "Token Found.")
-                openHomeScreen()
+                Log.d("MainActivity", "Token Found. Verifying with server...")
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val isValid = authRepository.verifyToken(accessToken)
+
+                    if (isValid) {
+                        Log.d("MainActivity", "Token is valid. Proceeding to home screen.")
+                        openHomeScreen()
+                    } else {
+                        Log.d("MainActivity", "Token is invalid. Redirecting to login.")
+                        openLoginScreen()
+                    }
+                }
                 return
             }
 
@@ -59,13 +80,14 @@ class MainActivity : ComponentActivity() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val workRequest = PeriodicWorkRequestBuilder<TokenRefreshWorker>(5, TimeUnit.MINUTES)
+        val workRequest = OneTimeWorkRequestBuilder<TokenRefreshWorker>()
             .setConstraints(constraints)
+            .setInitialDelay(5, TimeUnit.MINUTES)
             .build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+        WorkManager.getInstance(this).enqueueUniqueWork(
             "TokenRefreshWorker",
-            ExistingPeriodicWorkPolicy.UPDATE,
+            ExistingWorkPolicy.REPLACE,
             workRequest
         )
 
@@ -73,12 +95,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openHomeScreen() {
-        startActivity(Intent(this, HomeActivity::class.java))
-        finish()
+        runOnUiThread {
+            startActivity(Intent(this, HomeActivity::class.java))
+            finish()
+        }
     }
 
     private fun openLoginScreen() {
-        startActivity(Intent(this, LoginActivity::class.java))
-        finish()
+        runOnUiThread {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
 }
