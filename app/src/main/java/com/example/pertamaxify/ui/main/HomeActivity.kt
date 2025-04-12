@@ -44,8 +44,8 @@ class HomeActivity : ComponentActivity() {
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     var selectedTab by remember { mutableStateOf(0) }
-    val selectedSong by viewModel.selectedSong
-    val isPlayerVisible by viewModel.isPlayerVisible
+    var selectedSong by viewModel.selectedSong
+    var isPlayerVisible by viewModel.isPlayerVisible
     selectedSong?.let { Log.d("Init selected song: ", it.title + " - " + it.singer) }
 
     Scaffold(
@@ -81,7 +81,8 @@ fun MainScreen(viewModel: MainViewModel) {
                     // Show Mini Player
                     MiniPlayer(
                         song = selectedSong!!,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onClick = { isPlayerVisible = true }
                     )
                 }
             }

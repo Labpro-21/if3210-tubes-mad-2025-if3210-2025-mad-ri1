@@ -1,7 +1,10 @@
 package com.example.pertamaxify.ui.player
 
+import androidx.compose.foundation.LocalIndication
 import coil.compose.AsyncImage
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +54,7 @@ import kotlinx.coroutines.delay
 fun MiniPlayer(
     song: Song?,  // Nullable to handle no song case
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
     onLikeClick: (Boolean) -> Unit = {}   // Callback for like toggle
 ) {
     // Default to empty state if no song
@@ -101,6 +106,13 @@ fun MiniPlayer(
             .background(
                 color = RedBackground.copy(alpha = 0.56f)
             )
+            .clickable(
+                onClick = onClick,
+                role = Role.Button,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = LocalIndication.current
+            )
+
     ) {
         Box(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(6.dp)) {
             Row(Modifier.align(Alignment.CenterStart)) {
