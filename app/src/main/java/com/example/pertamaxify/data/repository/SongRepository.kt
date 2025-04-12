@@ -10,11 +10,21 @@ class SongRepository @Inject constructor(
 ) {
     fun getAllSongs(): List<Song> = songDao.getAllSong()
 
-    suspend fun upsertSong(song: com.example.pertamaxify.data.model.Song) {
+    fun getSongByTitle(title: String): List<Song> = songDao.getSongByTitle(title)
+
+    fun getSongById(id: String): Song = songDao.getSongById(id)
+
+    fun getAllLikedSongs(): List<Song> = songDao.getAllLikedSong()
+
+    suspend fun upsertSong(song: Song) {
         songDao.upsertSong(song)
     }
 
-    suspend fun deleteSong(song: com.example.pertamaxify.data.model.Song) {
+    suspend fun deleteSong(song: Song) {
         songDao.deleteSong(song)
+    }
+
+    suspend fun updateSong(song: Song) {
+        songDao.updateSong(song)
     }
 }

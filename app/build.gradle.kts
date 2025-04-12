@@ -113,6 +113,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Android fragment
+    implementation(libs.androidx.fragment.ktx)
 }
 
 // Allow references to generated code

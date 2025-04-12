@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- TabLayout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabIndicatorColor="@color/design_default_color_on_primary" />
+
+    <!-- Container for RecyclerViews -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- RecyclerView for "All" songs -->
+
+        <!-- Dummy Text for "All" tab -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_all_songs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/dummy_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="All Songs (Dummy)"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:visibility="visible" />
+
+        <!-- RecyclerView for "Liked" songs. Initially hidden -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:textColor="@color/white"
+            android:background="@color/background_color"
+            android:id="@+id/recycler_liked_songs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

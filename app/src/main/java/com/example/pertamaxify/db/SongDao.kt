@@ -3,6 +3,7 @@ package com.example.pertamaxify.db
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import com.example.pertamaxify.data.model.Song
 
@@ -14,6 +15,12 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE title LIKE :title")
     fun getSongByTitle(title: String): List<Song>
 
+    @Query("SELECT * FROM song WHERE id = :id")
+    fun getSongById(id: String): Song
+
+    @Query("SELECT * FROM song WHERE isLiked = 1")
+    fun getAllLikedSong(): List<Song>
+
     @Query("SELECT * FROM song WHERE title LIKE :title LIMIT 1")
     fun getSong(title: String): Song
 
@@ -22,4 +29,7 @@ interface SongDao {
 
     @Delete
     suspend fun deleteSong(song: Song)
+
+    @Update
+    suspend fun updateSong(song: Song)
 }

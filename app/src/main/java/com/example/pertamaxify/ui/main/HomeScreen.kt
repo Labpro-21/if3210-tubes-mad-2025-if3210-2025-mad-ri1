@@ -3,7 +3,6 @@ package com.example.pertamaxify.ui.main
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +15,6 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.song.NewSongsSection
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
-import com.example.pertamaxify.ui.theme.WhiteText
 import com.example.pertamaxify.utils.JwtUtils
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -51,23 +49,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
         rememberScrollState()
-    )) {
-        Text(text = "Home Page", style = MaterialTheme.typography.headlineMedium, color = WhiteText)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Token: ${token.value}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        decodedPayload.value?.let {
-            Text(text = "Decoded JWT:", style = MaterialTheme.typography.headlineSmall, color = WhiteText)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "ID: ${it.id}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-            Text(text = "Username: ${it.username}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-            Text(text = "Issued At: ${it.iat}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-            Text(text = "Expires At: ${it.exp}", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-        } ?: Text(text = "Failed to decode JWT", style = MaterialTheme.typography.bodyLarge, color = WhiteText)
-
-        Spacer(modifier = Modifier.height(24.dp))
-
+    ).padding(16.dp, 24.dp)) {
         NewSongsSection(songs = newSongs, onSongClick = { song ->
             selectedSong = song
         })

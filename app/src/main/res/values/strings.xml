@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Pertamaxify</string>
+    <string name="like_unlike">Like/Unlike</string>
 </resources>
