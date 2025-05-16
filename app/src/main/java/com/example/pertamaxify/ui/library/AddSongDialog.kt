@@ -1,8 +1,8 @@
 package com.example.pertamaxify.ui.library
 
-import android.content.ContentUris
+import android.content.ContentResolver
+import android.content.Intent
 import android.net.Uri
-import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,17 +29,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.R
-import com.example.pertamaxify.data.model.AddSongModel
 import com.example.pertamaxify.ui.song.UploadBox
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
-import androidx.core.net.toUri
-
+import com.example.pertamaxify.utils.UriHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,22 +45,45 @@ fun AddSongDialog(
     onSave: (String, String, String, String, String?) -> Unit,
     username: String?
 ) {
-
+    val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var artist by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<String?>(null) }
-    var audioUri by remember { mutableStateOf<String?>(null) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var audioUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Use OpenDocumentTree for getting persistable permissions
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()  // Changed from GetContent
     ) { uri: Uri? ->
-        uri?.let { imageUri = it.toString() }
+        uri?.let {
+            try {
+                // Take persistable URI permission for the image
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                imageUri = uri
+            } catch (e: Exception) {
+                Log.e("AddSongDialog", "Error taking persistable permission for image URI: $uri", e)
+                // Store the URI anyway, we'll handle access differently
+                imageUri = uri
+            }
+        }
     }
 
     val audioPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()  // Changed from GetContent
     ) { uri: Uri? ->
-        uri?.let { audioUri = it.toString() }
+        uri?.let {
+            try {
+                // Take persistable URI permission for the audio
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                audioUri = uri
+            } catch (e: Exception) {
+                Log.e("AddSongDialog", "Error taking persistable permission for audio URI: $uri", e)
+                // Store the URI anyway, we'll handle access differently
+                audioUri = uri
+            }
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -88,12 +107,16 @@ fun AddSongDialog(
                     UploadBox(
                         label = imageUri?.let { "Image Selected" } ?: "Upload Photo",
                         icon = R.drawable.placeholder,
-                        onClick = { imagePickerLauncher.launch("image/*") }
+                        onClick = {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        }
                     )
                     UploadBox(
                         label = audioUri?.let { "Audio Selected" } ?: "Upload File",
                         icon = R.drawable.placeholder,
-                        onClick = { audioPickerLauncher.launch("audio/*") }
+                        onClick = {
+                            audioPickerLauncher.launch(arrayOf("audio/*"))
+                        }
                     )
                 }
 
@@ -139,30 +162,13 @@ fun AddSongDialog(
                         onClick = {
                             if (title.isNotBlank() && artist.isNotBlank() &&
                                 imageUri != null && audioUri != null) {
-                                // Parse the imageUri and audioUri to uri
-//                                val uriImage = imageUri!!.toUri()
-//                                val uriAudio = audioUri!!.toUri()
-//
-//                                // Get the ID of image and audio
-//
-//                                val imageId = ContentUris.parseId(uriImage)
-//
-//                                val standardImageUri = ContentUris.withAppendedId(
-//                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                                    imageId
-//                                )
-//                                val audioId = ContentUris.parseId(uriAudio)
-//                                val standardAudioUri = ContentUris.withAppendedId(
-//                                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-//                                    audioId
-//                                )
-                                val imageId = imageUri!!.takeLast(10)
-                                val audioId = audioUri!!.takeLast(10)
 
-                                val basePath = "content://media/external/"
+                                // Store URIs directly as strings
+                                val imageUriString = imageUri.toString()
+                                val audioUriString = audioUri.toString()
 
-                                Log.d("URI:", "Image: $imageUri, Audio: $audioUri")
-                                onSave(title, artist, "$basePath$imageId", "$basePath$audioId", username)
+                                Log.d("URI:", "Image: $imageUriString, Audio: $audioUriString")
+                                onSave(title, artist, imageUriString, audioUriString, username)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),

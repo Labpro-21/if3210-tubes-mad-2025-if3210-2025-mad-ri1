@@ -29,67 +29,67 @@ object DatabaseSeeder {
             // Force open database by call random func
             database.songDao().getAllSong()
 
-            val seedSongs = listOf(
-                Song(
-                    "Starboy",
-                    "The Weeknd, Daft Punk",
-                    "content://media/external/file/1000000033",
-                    "content://media/external/file/1000000035"
-                ),
-                Song(
-                    "Here Comes The Sun",
-                    "The Beatles",
-                    "content://media/external/file/1000000034",
-                    "..."
-                ),
-                Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
-                Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
-            )
-            val historySeed = listOf(
-                HistoryPlayed(
-                    id = 1,
-                    songId = 3,
-                    email = "13522037@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 2,
-                    songId = 1,
-                    email = "13522037@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 3,
-                    songId = 1,
-                    email = "13522071@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 4,
-                    songId = 2,
-                    email = "13522071@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 5,
-                    songId = 3,
-                    email = "13522071@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 6,
-                    songId = 3,
-                    email = "13522091@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 7,
-                    songId = 2,
-                    email = "13522091@std.stei.itb.ac.id"
-                ),
-                HistoryPlayed(
-                    id = 8,
-                    songId = 2,
-                    email = "13522037@std.stei.itb.ac.id"
-                ),
-            )
+//            val seedSongs = listOf(
+//                Song(
+//                    "Starboy",
+//                    "The Weeknd, Daft Punk",
+//                    "content://media/external/file/1000000033",
+//                    "content://media/external/file/1000000035"
+//                ),
+//                Song(
+//                    "Here Comes The Sun",
+//                    "The Beatles",
+//                    "content://media/external/file/1000000034",
+//                    "..."
+//                ),
+//                Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
+//                Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
+//            )
+//            val historySeed = listOf(
+//                HistoryPlayed(
+//                    id = 1,
+//                    songId = 3,
+//                    email = "13522037@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 2,
+//                    songId = 1,
+//                    email = "13522037@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 3,
+//                    songId = 1,
+//                    email = "13522071@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 4,
+//                    songId = 2,
+//                    email = "13522071@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 5,
+//                    songId = 3,
+//                    email = "13522071@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 6,
+//                    songId = 3,
+//                    email = "13522091@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 7,
+//                    songId = 2,
+//                    email = "13522091@std.stei.itb.ac.id"
+//                ),
+//                HistoryPlayed(
+//                    id = 8,
+//                    songId = 2,
+//                    email = "13522037@std.stei.itb.ac.id"
+//                ),
+//            )
 
-            seedSongs.forEach { database.songDao().upsertSong(it) }
-            historySeed.forEach{database.historyPlayedDao().upsertHistory(it)}
+//            seedSongs.forEach { database.songDao().upsertSong(it) }
+//            historySeed.forEach{database.historyPlayedDao().upsertHistory(it)}
 
             prefs.edit() { putBoolean(PREF_KEY, true) }
             Log.d("DatabaseSeeder", "Seeding complete.")
