@@ -74,6 +74,7 @@ object UriHelper {
 
         try {
             val documentFile = DocumentFile.fromSingleUri(context, uri)
+            Log.d("UriHelper", "DocumentFile: $documentFile")
             documentFile?.let {
                 result["name"] = it.name
                 result["type"] = it.type
@@ -105,6 +106,8 @@ object UriHelper {
         } catch (e: Exception) {
             Log.e("UriHelper", "Error getting file info for URI: $uri", e)
         }
+
+        Log.d("Result", "File Info: $result")
 
         return result
     }

@@ -38,7 +38,8 @@ fun formatDuration(ms: Long): String {
 fun MusicPlayerScreen(
     song: Song,
     onDismiss: () -> Unit,  // Changed from Unit to () -> Unit
-    modifier: Modifier = Modifier  // Added default modifier
+    modifier: Modifier = Modifier,  // Added default modifier
+    email: String? = null, // The player who is playing the song
 ) {
     val context = LocalContext.current
     val player = remember {

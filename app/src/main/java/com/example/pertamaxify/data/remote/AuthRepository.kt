@@ -5,8 +5,9 @@ import com.example.pertamaxify.data.model.LoginResponse
 import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.data.model.RefreshTokenRequest
 import retrofit2.Response
+import javax.inject.Inject
 
-class AuthRepository {
+class AuthRepository @Inject constructor() {
     private val apiService = ApiClient.instance
 
     suspend fun login(email: String, password: String): Response<LoginResponse> {

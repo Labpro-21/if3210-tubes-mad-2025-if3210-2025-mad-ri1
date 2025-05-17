@@ -49,19 +49,4 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-//    fun fetchSongsUser(username: String) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            val songs = songRepository.getAllSongsByUser(username)
-//            recentlyPlayedSongs = songs
-//        }
-//    }
-
-//    private fun fetchSongs() {
-//        viewModelScope.launch {
-//            val songs = withContext(Dispatchers.IO) {
-//                songRepository.getAllSongs()
-//            }
-//            recentlyPlayedSongs = songs
-//        }
-//    }
 }

@@ -30,6 +30,7 @@ fun HomeScreen(
 
     val accessToken = SecurePrefs.getAccessToken(context)
     val username: String?
+    val email: String?
     if (!accessToken.isNullOrEmpty()) {
         val jwtPayload = JwtUtils.decodeJwt(accessToken)
         username = jwtPayload?.username ?: ""
@@ -40,15 +41,6 @@ fun HomeScreen(
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
     val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
-    // Dummy data
-    val newSongs = remember {
-        listOf(
-//            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000033", "content://media/external/file/1000000035"),
-//            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000034", "..."),
-//            Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
-            Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
-        )
-    }
 
     LaunchedEffect(Unit) {
         token.value = SecurePrefs.getAccessToken(context) ?: "No token found"
@@ -65,10 +57,6 @@ fun HomeScreen(
         rememberScrollState()
     ).padding(16.dp, 24.dp)) {
         NewSongsSection(
-//            songs = newSongs,
-//            onSongClick = {
-//                song -> selectedSong = song
-//            }
             songs = recentlyAddedSongs,
             onSongClick = { song ->
                 onSongSelected(song)

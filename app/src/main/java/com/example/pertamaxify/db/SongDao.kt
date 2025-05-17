@@ -2,6 +2,7 @@ package com.example.pertamaxify.db
 
 import androidx.room.Dao
 import androidx.room.Delete
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
@@ -44,6 +45,9 @@ interface SongDao {
 
     @Update
     suspend fun updateSong(song: Song)
+
+    @Insert
+    suspend fun insertSong(song: Song)
 
     // Specific for an user
     @Query("SELECT * FROM song WHERE addedBy = :username ORDER BY addedTime DESC")

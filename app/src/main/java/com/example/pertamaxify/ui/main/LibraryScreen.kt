@@ -22,13 +22,16 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     val accessToken = SecurePrefs.getAccessToken(context)
-    var username: String?
+    val username: String?
+    val email: String?
     if (!accessToken.isNullOrEmpty()) {
         val jwtPayload = JwtUtils.decodeJwt(accessToken)
         username = jwtPayload?.username ?: ""
-        if (username.isNotEmpty()) username = "$username@std.stei.itb.ac.id"
+
+        if (username.isNotEmpty()) email = "$username@std.stei.itb.ac.id"
     } else {
         username = ""
+        email = ""
     }
 
     // Observe StateFlows from the VM
@@ -68,14 +71,14 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         if (showDialog) {
             AddSongDialog(
                 onDismiss = { showDialog = false },
-                onSave = { title, artist, imagePath, audioPath, username ->
+                onSave = { title, artist, imagePath, audioPath, email ->
                     viewModel.saveSong(
                         Song(
                             title = title,
                             singer = artist,
                             imagePath = imagePath,
                             audioPath = audioPath,
-                            addedBy = username
+                            addedBy = email
                         )
                     )
                     showDialog = false
