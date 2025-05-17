@@ -9,7 +9,7 @@ import com.example.pertamaxify.data.model.Song
 
 @Dao
 interface SongDao {
-    @Query("SELECT * FROM song")
+    @Query("SELECT * FROM song ORDER BY addedTime DESC")
     fun getAllSong() : List<Song>
 
     @Query("SELECT * FROM song WHERE title LIKE :title")
@@ -18,11 +18,23 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE id = :id")
     fun getSongById(id: String): Song
 
-    @Query("SELECT * FROM song WHERE isLiked = 1")
+    @Query("SELECT * FROM song WHERE isLiked = 1 ORDER BY addedTime DESC")
     fun getAllLikedSong(): List<Song>
 
     @Query("SELECT * FROM song WHERE title LIKE :title LIMIT 1")
     fun getSong(title: String): Song
+
+    @Query("SELECT * FROM song WHERE recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
+    fun getRecentlyPlayedSongs(): List<Song>
+
+    @Query("SELECT * FROM song WHERE addedBy = :email AND recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
+    fun getRecentlyPlayedSongsByUser(email: String): List<Song>
+
+    @Query("SELECT * FROM song WHERE addedBy IS NOT NULL ORDER BY addedTime DESC LIMIT 20")
+    fun getRecentlyAddedSongs(): List<Song>
+
+    @Query("SELECT * FROM song WHERE addedBy = :email AND recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
+    fun getRecentlyAddedSongsByUser(email: String): List<Song>
 
     @Upsert
     suspend fun upsertSong(song: Song)
@@ -34,9 +46,9 @@ interface SongDao {
     suspend fun updateSong(song: Song)
 
     // Specific for an user
-    @Query("SELECT * FROM song WHERE addedBy = :username")
+    @Query("SELECT * FROM song WHERE addedBy = :username ORDER BY addedTime DESC")
     fun getAllSongByUser(username: String): List<Song>
 
-    @Query("SELECT * FROM song WHERE addedBy = :username AND isLiked = 1")
+    @Query("SELECT * FROM song WHERE addedBy = :username AND isLiked = 1 ORDER BY addedTime DESC")
     fun getAllLikedSongByUser(username: String): List<Song>
 }

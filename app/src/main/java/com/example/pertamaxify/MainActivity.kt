@@ -12,6 +12,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.model.User
 import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.db.AppDatabase
 import com.example.pertamaxify.db.DatabaseSeeder
@@ -47,8 +48,6 @@ class MainActivity : ComponentActivity() {
 
         // Start the background worker
         startTokenRefreshWorker()
-
-        val temp = database.songDao()
 
         // Show splash screen only for API 29 & 30
         if (Build.VERSION.SDK_INT in 29..30) {
@@ -86,6 +85,15 @@ class MainActivity : ComponentActivity() {
 
                     if (isValid) {
                         Log.d("MainActivity", "Token is valid. Proceeding to home screen.")
+
+                        // Insert the user data into the database
+                        database.userDao().upsertUser(
+                            User(
+                                username = jwtPayload.username,
+                                email = "${jwtPayload.username}@std.stei.itb.ac.id",
+                                imageProfile = null
+                            )
+                        )
                         openHomeScreen()
                     } else {
                         Log.d("MainActivity", "Token is invalid. Redirecting to login.")

@@ -30,7 +30,7 @@ fun LocalExternalImage(fileName: String) {
 @Composable
 fun NewSongsSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(8.dp, 4.dp)) {
-        Text("New songs", style = Typography.displayLarge, color = WhiteText, modifier = Modifier.padding(0.dp, 4.dp))
+        Text("New songs", style = MaterialTheme.typography.titleLarge, color = WhiteText, modifier = Modifier.padding(0.dp, 4.dp))
         LazyRow {
             items(songs) { song ->
                 Column(

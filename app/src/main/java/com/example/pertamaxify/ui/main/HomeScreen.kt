@@ -28,7 +28,6 @@ fun HomeScreen(
     val token = remember { mutableStateOf("") }
     val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
 
-    var showDialog by remember { mutableStateOf(false) }
     val accessToken = SecurePrefs.getAccessToken(context)
     val username: String?
     if (!accessToken.isNullOrEmpty()) {
@@ -37,6 +36,9 @@ fun HomeScreen(
     } else {
         username = ""
     }
+
+    val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
+    val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
     // Dummy data
     val newSongs = remember {
@@ -67,12 +69,12 @@ fun HomeScreen(
 //            onSongClick = {
 //                song -> selectedSong = song
 //            }
-            songs = newSongs,
+            songs = recentlyAddedSongs,
             onSongClick = { song ->
                 onSongSelected(song)
             }
         )
         Spacer(modifier = Modifier.height(24.dp))
-        RecentlyPlayedSection(songs = viewModel.recentlyPlayedSongs)
+        RecentlyPlayedSection(songs = recentlyPlayedSongs)
     }
 }

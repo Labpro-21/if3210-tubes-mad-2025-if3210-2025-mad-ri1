@@ -22,10 +22,11 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     val accessToken = SecurePrefs.getAccessToken(context)
-    val username: String?
+    var username: String?
     if (!accessToken.isNullOrEmpty()) {
         val jwtPayload = JwtUtils.decodeJwt(accessToken)
         username = jwtPayload?.username ?: ""
+        if (username.isNotEmpty()) username = "$username@std.stei.itb.ac.id"
     } else {
         username = ""
     }
