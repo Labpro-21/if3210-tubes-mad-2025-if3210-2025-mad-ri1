@@ -25,14 +25,9 @@ class HomeViewModel @Inject constructor(
     private val _recentlyAddedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyAddedSongs: StateFlow<List<Song>> = _recentlyAddedSongs
 
-    // List of recently played songs
-//    var recentlyPlayedSongs by mutableStateOf<List<Song>>(emptyList())
-//        private set
-
     init {
         fetchRecentlyPlayedSongs()
         fetchRecentlyAddedSongs()
-//        fetchSongs()
     }
 
     fun fetchRecentlyPlayedSongs() {

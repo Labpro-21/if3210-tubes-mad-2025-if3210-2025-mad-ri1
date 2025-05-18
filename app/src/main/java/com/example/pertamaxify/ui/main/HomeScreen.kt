@@ -47,12 +47,6 @@ fun HomeScreen(
         decodedPayload.value = JwtUtils.decodeJwt(token.value)
     }
 
-//    // Show player when a song is clicked
-//    selectedSong?.let { song ->
-//        MusicPlayerScreen(song = song)
-//        return
-//    }
-
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
         rememberScrollState()
     ).padding(16.dp, 24.dp)) {
