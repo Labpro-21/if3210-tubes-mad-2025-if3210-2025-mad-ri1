@@ -23,8 +23,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.pertamaxify.R
+import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.repository.SongRepository
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
+import com.example.pertamaxify.utils.JwtUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Date
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -37,11 +44,35 @@ fun formatDuration(ms: Long): String {
 @Composable
 fun MusicPlayerScreen(
     song: Song,
-    onDismiss: () -> Unit,  // Changed from Unit to () -> Unit
-    modifier: Modifier = Modifier,  // Added default modifier
-    email: String? = null, // The player who is playing the song
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    email: String? = null,
+    songRepository: SongRepository? = null // Optional repository injection
 ) {
     val context = LocalContext.current
+
+    // Get user email if not provided
+    val userEmail = email ?: remember {
+        val accessToken = SecurePrefs.getAccessToken(context)
+        if (!accessToken.isNullOrEmpty()) {
+            val jwtPayload = JwtUtils.decodeJwt(accessToken)
+            val username = jwtPayload?.username ?: ""
+            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
+        } else {
+            ""
+        }
+    }
+
+    // Update recently played timestamp
+    LaunchedEffect(song.id) {
+        if (songRepository != null && userEmail.isNotEmpty()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val updatedSong = song.copy(recentlyPlayed = Date())
+                songRepository.updateSong(updatedSong)
+            }
+        }
+    }
+
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(song.audioPath)
@@ -135,7 +166,6 @@ fun MusicPlayerScreen(
                     SliderDefaults.Thumb(
                         interactionSource = remember { MutableInteractionSource() },
                         colors = SliderDefaults.colors(thumbColor = WhiteText),
-//                        modifier = Modifier.size(8.dp)  // Circular thumb size
                     )
                 },
             )

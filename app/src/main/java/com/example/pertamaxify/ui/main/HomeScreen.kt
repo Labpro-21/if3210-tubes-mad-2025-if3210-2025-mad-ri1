@@ -15,7 +15,6 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.utils.JwtUtils
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.song.NewSongsSection
 
 @Composable
@@ -25,38 +24,55 @@ fun HomeScreen(
     onSongSelected: (Song) -> Unit
 ) {
     val context = LocalContext.current
-    val token = remember { mutableStateOf("") }
-    val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
 
+    // Get user email from token
     val accessToken = SecurePrefs.getAccessToken(context)
-    val username: String?
-    val email: String?
-    if (!accessToken.isNullOrEmpty()) {
-        val jwtPayload = JwtUtils.decodeJwt(accessToken)
-        username = jwtPayload?.username ?: ""
-    } else {
-        username = ""
+    val email = remember {
+        if (!accessToken.isNullOrEmpty()) {
+            val jwtPayload = JwtUtils.decodeJwt(accessToken)
+            val username = jwtPayload?.username ?: ""
+            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
+        } else {
+            ""
+        }
     }
 
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
     val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
-
+    // This effect will run whenever the HomeScreen is displayed
     LaunchedEffect(Unit) {
-        token.value = SecurePrefs.getAccessToken(context) ?: "No token found"
-        decodedPayload.value = JwtUtils.decodeJwt(token.value)
+        // Refresh data when screen is shown
+        viewModel.refreshAllData()
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
-        rememberScrollState()
-    ).padding(16.dp, 24.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp, 24.dp)
+    ) {
         NewSongsSection(
             songs = recentlyAddedSongs,
             onSongClick = { song ->
+                // Update recently played timestamp when song is clicked
+                viewModel.updateSongPlayedTimestamp(song, email)
+                // Notify parent that song was selected
                 onSongSelected(song)
             }
         )
+
         Spacer(modifier = Modifier.height(24.dp))
-        RecentlyPlayedSection(songs = recentlyPlayedSongs)
+
+        RecentlyPlayedSection(
+            songs = recentlyPlayedSongs,
+            onSongClick = { song ->
+                // Update recently played timestamp when song is clicked
+                viewModel.updateSongPlayedTimestamp(song, email)
+                // Notify parent that song was selected
+                onSongSelected(song)
+            }
+        )
     }
 }

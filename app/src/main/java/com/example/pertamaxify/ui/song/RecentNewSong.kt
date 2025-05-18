@@ -48,17 +48,17 @@ fun NewSongsSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
     }
 }
 
-
 @Composable
-fun RecentlyPlayedSection(songs: List<Song>) {
+fun RecentlyPlayedSection(songs: List<Song>, onSongClick: (Song) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Recently played", style = MaterialTheme.typography.titleLarge, color = WhiteText, modifier = Modifier.padding(0.dp, 4.dp))
         Column {
             songs.forEach { song ->
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSongClick(song) } // Added clickable here
                         .padding(vertical = 8.dp)
-                        .horizontalScroll(rememberScrollState())
                 ) {
                     LocalExternalImage(song.imagePath)
                     Spacer(modifier = Modifier.width(8.dp))

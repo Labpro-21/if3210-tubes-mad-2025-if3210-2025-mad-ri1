@@ -1,18 +1,16 @@
 package com.example.pertamaxify.data.model
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.repository.SongRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import java.util.Date
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -25,9 +23,18 @@ class HomeViewModel @Inject constructor(
     private val _recentlyAddedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyAddedSongs: StateFlow<List<Song>> = _recentlyAddedSongs
 
+    // Flag to track when data should be refreshed
+    private val _dataRefreshNeeded = mutableStateOf(true)
+
     init {
+        refreshAllData()
+    }
+
+    // Call this function when you want to refresh all data
+    fun refreshAllData() {
         fetchRecentlyPlayedSongs()
         fetchRecentlyAddedSongs()
+        _dataRefreshNeeded.value = false
     }
 
     fun fetchRecentlyPlayedSongs() {
@@ -44,4 +51,35 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // Call this when a song is played to update its recentlyPlayed timestamp
+    fun updateSongPlayedTimestamp(song: Song, email: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (email.isNullOrEmpty()) return@launch
+
+            try {
+                // Only update if we have a valid email
+                val updatedSong = song.copy(
+                    recentlyPlayed = Date()
+                )
+
+                songRepository.updateSong(updatedSong)
+
+                // After updating, refresh the song lists
+                fetchRecentlyPlayedSongs()
+            } catch (e: Exception) {
+                // Handle any errors
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // Mark that data needs to be refreshed (call this when navigating to HomeScreen)
+    fun markDataRefreshNeeded() {
+        _dataRefreshNeeded.value = true
+    }
+
+    // Check if data refresh is needed
+    fun isDataRefreshNeeded(): Boolean {
+        return _dataRefreshNeeded.value
+    }
 }
