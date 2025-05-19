@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
 
@@ -76,6 +77,21 @@ class HomeViewModel @Inject constructor(
     fun updateSong(song: Song) {
         viewModelScope.launch(Dispatchers.IO) {
             songRepository.updateSong(song)
+        }
+    }
+
+    fun toggleLikeSong(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedSong = song.copy(isLiked = !song.isLiked!!)
+            songRepository.updateSong(updatedSong)
+        }
+    }
+
+    fun deleteSong(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            songRepository.deleteSong(song)
+            fetchRecentlyPlayedSongs()
+            fetchRecentlyAddedSongs()
         }
     }
 
