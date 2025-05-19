@@ -43,7 +43,6 @@ class HomeActivity : ComponentActivity() {
                 val homeViewModel: HomeViewModel = hiltViewModel()
 
                 LaunchedEffect(Unit) {
-                    viewModel.loadLastPlayedSong()
                     homeViewModel.refreshAllData()
                 }
 

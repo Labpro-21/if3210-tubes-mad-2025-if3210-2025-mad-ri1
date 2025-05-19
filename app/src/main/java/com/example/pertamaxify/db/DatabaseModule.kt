@@ -39,12 +39,6 @@ object DatabaseModule {
         return database.userDao()
     }
 
-    // Create HistoryPlayedDao instance
-    @Provides
-    fun provideHistoryPlayedDao(database: AppDatabase): HistoryPlayedDao {
-        return database.historyPlayedDao()
-    }
-
     @Provides
     @Singleton
     fun provideSongRepository(songDao: SongDao): SongRepository {
