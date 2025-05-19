@@ -28,9 +28,8 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         val jwtPayload = JwtUtils.decodeJwt(accessToken)
         username = jwtPayload?.username ?: ""
 
-        if (username.isNotEmpty()) email = "$username@std.stei.itb.ac.id"
+        email = "$username@std.stei.itb.ac.id"
     } else {
-        username = ""
         email = ""
     }
 
@@ -75,15 +74,15 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
                     viewModel.saveSong(
                         Song(
                             title = title,
-                            singer = artist,
-                            imagePath = imagePath,
-                            audioPath = audioPath,
+                            artist = artist,
+                            artwork = imagePath,
+                            url = audioPath,
                             addedBy = email
                         )
                     )
                     showDialog = false
                 },
-                username = username
+                email = email
             )
         }
 

@@ -7,10 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,13 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.pertamaxify.R
@@ -61,14 +57,14 @@ fun MiniPlayer(
     val currentSong = song ?: Song(
         id = 0,
         title = "No song selected",
-        singer = "",
-        imagePath = "",
-        audioPath = "",
+        artist = "",
+        artwork = "",
+        url = "",
     )
     val context = LocalContext.current
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(currentSong.audioPath)
+            val mediaItem = MediaItem.fromUri(currentSong.url)
             setMediaItem(mediaItem)
             prepare()
             playWhenReady = true
@@ -116,12 +112,21 @@ fun MiniPlayer(
     ) {
         Box(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(6.dp)) {
             Row(Modifier.align(Alignment.CenterStart)) {
-                AsyncImage(
-                    model = currentSong.imagePath,
-                    contentDescription = "Album Art",
-                    modifier = Modifier.size(50.dp).clip(RoundedCornerShape(4.dp)),
-                    placeholder = painterResource(id = R.drawable.logo)
-                )
+                if (currentSong.artwork.isNullOrBlank()) {
+                    AsyncImage(
+                        model = R.drawable.song_image_placeholder,
+                        contentDescription = "Album Art",
+                        modifier = Modifier.size(50.dp).clip(RoundedCornerShape(4.dp)),
+                        placeholder = painterResource(id = R.drawable.logo)
+                    )
+                } else {
+                    AsyncImage(
+                        model = currentSong.artwork,
+                        contentDescription = "Album Art",
+                        modifier = Modifier.size(50.dp).clip(RoundedCornerShape(4.dp)),
+                        placeholder = painterResource(id = R.drawable.logo)
+                    )
+                }
 
                 Column(Modifier.padding(horizontal = 4.dp)) {
                     Text(
@@ -133,7 +138,7 @@ fun MiniPlayer(
                         maxLines = 1,
                     )
                     Text(
-                        text = currentSong.singer,
+                        text = currentSong.artist,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray,
                         maxLines = 1,

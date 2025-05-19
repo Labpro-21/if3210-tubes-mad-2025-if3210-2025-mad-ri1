@@ -10,14 +10,18 @@ import java.util.Date
 @TypeConverters(Converters::class)
 data class Song(
     val title: String,
-    val singer: String,
-    val imagePath: String, // Image path
-    val audioPath: String, // Audio path
-    // email of user who added this song, with assumption the email is unique
-    val addedBy: String? = null,
+    val artist: String,
+    val artwork: String? = null, // Image path
+    val url: String, // Audio path
+
+    val addedBy: String? = null, // email of user who added this song, with assumption the email is unique
     val isLiked: Boolean? = false, // is the song liked by user who added it
     val addedTime: Date = Date(), // When the song was added to the database
     val recentlyPlayed: Date? = null, // When the song was last played by the user who added it
+
+    val isDownloaded: Boolean? = false, // Is the song downloaded from the server
+
+    val duration: Int? = null, // Duration in seconds
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0

@@ -73,6 +73,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateSong(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            songRepository.updateSong(song)
+        }
+    }
+
     // Mark that data needs to be refreshed (call this when navigating to HomeScreen)
     fun markDataRefreshNeeded() {
         _dataRefreshNeeded.value = true

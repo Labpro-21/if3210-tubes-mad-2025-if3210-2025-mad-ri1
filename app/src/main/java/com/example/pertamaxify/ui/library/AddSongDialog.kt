@@ -1,6 +1,5 @@
 package com.example.pertamaxify.ui.library
 
-import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -24,13 +23,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -47,8 +44,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddSongDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, String?) -> Unit,
-    username: String?
+    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
+    email: String?
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
@@ -215,20 +212,20 @@ fun AddSongDialog(
                     Button(
                         onClick = {
                             if (title.isNotBlank() && artist.isNotBlank() &&
-                                imageUri != null && audioUri != null) {
+                                audioUri != null) {
 
                                 // Store URIs directly as strings
                                 val imageUriString = imageUri.toString()
                                 val audioUriString = audioUri.toString()
 
                                 Log.d("URI:", "Image: $imageUriString, Audio: $audioUriString")
-                                onSave(title, artist, imageUriString, audioUriString, username)
+                                onSave(title, artist, imageUriString, audioUriString, email)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
                         modifier = Modifier.weight(1f),
                         enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() &&
-                                imageUri != null && audioUri != null
+                                audioUri != null
                     ) {
                         Text("Save", color = Color.White)
                     }

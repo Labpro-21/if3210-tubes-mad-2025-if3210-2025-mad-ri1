@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -19,7 +18,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.IconButton
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.pertamaxify.R
@@ -75,7 +73,7 @@ fun MusicPlayerScreen(
 
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(song.audioPath)
+            val mediaItem = MediaItem.fromUri(song.url)
             setMediaItem(mediaItem)
             prepare()
             playWhenReady = true
@@ -125,13 +123,27 @@ fun MusicPlayerScreen(
                 }
             }
 
-            AsyncImage(
-                model = song.imagePath,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-            )
+            if (song.artwork.isNullOrBlank()) {
+                // Placeholder for artwork if not available
+                AsyncImage(
+                    model = R.drawable.song_image_placeholder,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                )
+            }
+            else {
+                // Load the song artwork
+                AsyncImage(
+                    model = song.artwork,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -143,7 +155,7 @@ fun MusicPlayerScreen(
                 color = WhiteText
             )
             Text(
-                song.singer,
+                song.artist,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
                 ),
