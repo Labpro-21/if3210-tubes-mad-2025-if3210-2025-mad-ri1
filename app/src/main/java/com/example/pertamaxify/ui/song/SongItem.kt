@@ -109,20 +109,20 @@ fun SongItem(
                     painter = painterResource(id = R.drawable.song_image_placeholder),
                     contentDescription = "Song artwork",
                     modifier = Modifier
-                        .width(100.dp)
-                        .height(100.dp)
+                        .width(60.dp)
+                        .height(60.dp)
                 )
             } else {
                 AsyncImage(
                     model = song.artwork,
                     contentDescription = "Song artwork",
                     modifier = Modifier
-                        .width(100.dp)
-                        .height(100.dp),
+                        .width(60.dp)
+                        .height(60.dp),
                     error = painterResource(id = R.drawable.song_image_placeholder)
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(song.title, color = WhiteText)
                 Text(song.artist, color = Color.Gray)
