@@ -19,12 +19,21 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.IconButton
-import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image as ComposeImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.pertamaxify.R
+import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.model.HomeViewModel
+import com.example.pertamaxify.data.repository.SongRepository
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
+import com.example.pertamaxify.utils.JwtUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Date
+import androidx.hilt.navigation.compose.hiltViewModel
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -37,13 +46,42 @@ fun formatDuration(ms: Long): String {
 @Composable
 fun MusicPlayerScreen(
     song: Song,
-    onDismiss: () -> Unit,  // Changed from Unit to () -> Unit
-    modifier: Modifier = Modifier  // Added default modifier
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    email: String? = null,
+    songRepository: SongRepository? = null, // Optional repository injection
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+    // Get user email if not provided
+    val userEmail = email ?: remember {
+        val accessToken = SecurePrefs.getAccessToken(context)
+        if (!accessToken.isNullOrEmpty()) {
+            val jwtPayload = JwtUtils.decodeJwt(accessToken)
+            val username = jwtPayload?.username ?: ""
+            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
+        } else {
+            ""
+        }
+    }
+
+    // Local state for like status to provide immediate UI feedback
+    var isLiked by remember { mutableStateOf(song.isLiked ?: false) }
+
+    // Update recently played timestamp
+    LaunchedEffect(song.id) {
+        if (songRepository != null && userEmail.isNotEmpty()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val updatedSong = song.copy(recentlyPlayed = Date())
+                songRepository.updateSong(updatedSong)
+            }
+        }
+    }
+
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(song.audioPath)
+            val mediaItem = MediaItem.fromUri(song.url)
             setMediaItem(mediaItem)
             prepare()
             playWhenReady = true
@@ -76,13 +114,36 @@ fun MusicPlayerScreen(
                 .background(RedBackground)
                 .padding(16.dp)
         ) {
-            // Dismiss button at top-right
+            // Top row with dismiss and like buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Like button
                 IconButton(
-                    onClick = onDismiss,  // Use the passed dismiss callback
+                    onClick = {
+                        // Toggle local state immediately for UI feedback
+                        isLiked = !isLiked
+                        // Update song in database
+                        val updatedSong = song.copy(isLiked = isLiked)
+                        homeViewModel.updateSong(updatedSong)
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isLiked) R.drawable.tabler_heart_filled
+                            else R.drawable.tabler_heart
+                        ),
+                        contentDescription = if (isLiked) "Unlike" else "Like",
+                        tint = if (isLiked) Color(0xFFFF80AB) else WhiteText,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                // Dismiss button
+                IconButton(
+                    onClick = onDismiss,
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
@@ -93,13 +154,28 @@ fun MusicPlayerScreen(
                 }
             }
 
-            AsyncImage(
-                model = song.imagePath,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-            )
+            // Album artwork with placeholder fallback
+            if (song.artwork.isNullOrBlank()) {
+                // Use local drawable resource for placeholder
+                ComposeImage(
+                    painter = painterResource(id = R.drawable.song_image_placeholder),
+                    contentDescription = "Album artwork",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                )
+            }
+            else {
+                // Load the song artwork
+                AsyncImage(
+                    model = song.artwork,
+                    contentDescription = "Album artwork",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                    error = painterResource(id = R.drawable.song_image_placeholder)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -111,7 +187,7 @@ fun MusicPlayerScreen(
                 color = WhiteText
             )
             Text(
-                song.singer,
+                song.artist,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
                 ),
@@ -134,7 +210,6 @@ fun MusicPlayerScreen(
                     SliderDefaults.Thumb(
                         interactionSource = remember { MutableInteractionSource() },
                         colors = SliderDefaults.colors(thumbColor = WhiteText),
-//                        modifier = Modifier.size(8.dp)  // Circular thumb size
                     )
                 },
             )

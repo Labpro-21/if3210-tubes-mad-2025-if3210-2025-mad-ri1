@@ -1,4 +1,3 @@
-// SongRepository.kt
 package com.example.pertamaxify.data.repository
 
 import com.example.pertamaxify.data.model.Song
@@ -16,6 +15,14 @@ class SongRepository @Inject constructor(
 
     fun getAllLikedSongs(): List<Song> = songDao.getAllLikedSong()
 
+    fun getRecentlyPlayedSongs(): List<Song> = songDao.getRecentlyPlayedSongs()
+
+    fun getRecentlyPlayedSongsByUser(email: String): List<Song> = songDao.getRecentlyPlayedSongsByUser(email)
+
+    fun getRecentlyAddedSongs(): List<Song> = songDao.getRecentlyAddedSongs()
+
+    fun getRecentlyAddedSongsByUser(email: String): List<Song> = songDao.getRecentlyAddedSongsByUser(email)
+
     suspend fun upsertSong(song: Song) {
         songDao.upsertSong(song)
     }
@@ -26,6 +33,10 @@ class SongRepository @Inject constructor(
 
     suspend fun updateSong(song: Song) {
         songDao.updateSong(song)
+    }
+
+    suspend fun insertSong(song: Song) {
+        songDao.insertSong(song)
     }
 
     // Specific for an user

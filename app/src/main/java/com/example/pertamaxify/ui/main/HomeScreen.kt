@@ -10,13 +10,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
-import com.example.pertamaxify.data.model.JwtPayload
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.utils.JwtUtils
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.song.NewSongsSection
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 
 @Composable
 fun HomeScreen(
@@ -25,54 +27,110 @@ fun HomeScreen(
     onSongSelected: (Song) -> Unit
 ) {
     val context = LocalContext.current
-    val token = remember { mutableStateOf("") }
-    val decodedPayload = remember { mutableStateOf<JwtPayload?>(null) }
 
-    var showDialog by remember { mutableStateOf(false) }
+    // For deletion confirmation dialog
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var songToDelete by remember { mutableStateOf<Song?>(null) }
+
+    // Get user email from token
     val accessToken = SecurePrefs.getAccessToken(context)
-    val username: String?
-    if (!accessToken.isNullOrEmpty()) {
-        val jwtPayload = JwtUtils.decodeJwt(accessToken)
-        username = jwtPayload?.username ?: ""
-    } else {
-        username = ""
+    val email = remember {
+        if (!accessToken.isNullOrEmpty()) {
+            val jwtPayload = JwtUtils.decodeJwt(accessToken)
+            val username = jwtPayload?.username ?: ""
+            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
+        } else {
+            ""
+        }
     }
 
-    // Dummy data
-    val newSongs = remember {
-        listOf(
-            Song("Starboy", "The Weeknd, Daft Punk", "content://media/external/file/1000000033", "content://media/external/file/1000000035"),
-            Song("Here Comes The Sun", "The Beatles", "content://media/external/file/1000000034", "..."),
-            Song("Midnight Pretenders", "Tomoko Aran", "Sickboy Chainsmoker.png", "..."),
-            Song("Violent Crimes", "Kanye West", "Sickboy Chainsmoker.png", "...")
-        )
-    }
+    val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
+    val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
+    // This effect will run whenever the HomeScreen is displayed
     LaunchedEffect(Unit) {
-        token.value = SecurePrefs.getAccessToken(context) ?: "No token found"
-        decodedPayload.value = JwtUtils.decodeJwt(token.value)
+        // Refresh data when screen is shown
+        viewModel.refreshAllData()
     }
 
-//    // Show player when a song is clicked
-//    selectedSong?.let { song ->
-//        MusicPlayerScreen(song = song)
-//        return
-//    }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().verticalScroll(
-        rememberScrollState()
-    ).padding(16.dp, 24.dp)) {
-        NewSongsSection(
-//            songs = newSongs,
-//            onSongClick = {
-//                song -> selectedSong = song
-//            }
-            songs = newSongs,
-            onSongClick = { song ->
-                onSongSelected(song)
+    // Delete confirmation dialog
+    if (showDeleteDialog && songToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                songToDelete = null
+            },
+            title = { Text("Delete Song") },
+            text = { Text("Are you sure you want to delete ${songToDelete?.title}?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        songToDelete?.let { song ->
+                            viewModel.deleteSong(song)
+                        }
+                        showDeleteDialog = false
+                        songToDelete = null
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        songToDelete = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
             }
         )
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp, 24.dp)
+    ) {
+        NewSongsSection(
+            songs = recentlyAddedSongs,
+            onSongClick = { song ->
+                // Update recently played timestamp when song is clicked
+                viewModel.updateSongPlayedTimestamp(song, email)
+                // Notify parent that song was selected
+                onSongSelected(song)
+            },
+            onToggleLike = { song ->
+                viewModel.toggleLikeSong(song)
+            },
+            onDeleteSong = { song ->
+                // Show confirmation dialog
+                songToDelete = song
+                showDeleteDialog = true
+            }
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
-        RecentlyPlayedSection(songs = viewModel.recentlyPlayedSongs)
+
+        RecentlyPlayedSection(
+            songs = recentlyPlayedSongs,
+            onSongClick = { song ->
+                // Update recently played timestamp when song is clicked
+                viewModel.updateSongPlayedTimestamp(song, email)
+                // Notify parent that song was selected
+                onSongSelected(song)
+            },
+            onToggleLike = { song ->
+                viewModel.toggleLikeSong(song)
+            },
+            onDeleteSong = { song ->
+                // Show confirmation dialog
+                songToDelete = song
+                showDeleteDialog = true
+            }
+        )
     }
 }

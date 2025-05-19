@@ -2,6 +2,9 @@ package com.example.pertamaxify.db
 
 import android.content.Context
 import androidx.room.Room
+import com.example.pertamaxify.data.remote.AuthRepository
+import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.data.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,30 +19,42 @@ object DatabaseModule {
     // Provide the Room Database
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "pertamaxify_database"
-        )
-            .build()
+        ).build()
     }
 
-    // Create SongDao instance
     @Provides
+    @Singleton
     fun provideSongDao(database: AppDatabase): SongDao {
         return database.songDao()
     }
 
-    // Create UserDao instance
     @Provides
+    @Singleton
     fun provideUserDao(database: AppDatabase): UserDao {
         return database.userDao()
     }
 
-    // Create HistoryPlayedDao instance
     @Provides
-    fun provideHistoryPlayedDao(database: AppDatabase): HistoryPlayedDao {
-        return database.historyPlayedDao()
+    @Singleton
+    fun provideSongRepository(songDao: SongDao): SongRepository {
+        return SongRepository(songDao)
     }
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(userDao: UserDao): UserRepository {
+        return UserRepository(userDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(): AuthRepository {
+        return AuthRepository()
+    }
+
 }

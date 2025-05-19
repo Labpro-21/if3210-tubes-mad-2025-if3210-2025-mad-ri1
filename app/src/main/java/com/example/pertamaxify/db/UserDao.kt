@@ -17,6 +17,9 @@ interface UserDao {
     @Delete
     fun deleteUser(user: User)
 
-    @Query("SELECT * FROM user WHERE email LIKE :email LIMIT 1")
+    @Query("SELECT * FROM user WHERE email = :email")
     fun getUserByEmail(email: String): User
+
+    @Query("SELECT * FROM user WHERE username LIKE :username LIMIT 1")
+    fun getUserByUsername(username: String): User
 }

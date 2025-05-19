@@ -9,30 +9,10 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,29 +24,26 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.ui.main.HomeActivity
-import com.example.pertamaxify.ui.theme.GreenButton
-import com.example.pertamaxify.ui.theme.InputBackground
-import com.example.pertamaxify.ui.theme.InputBorder
-import com.example.pertamaxify.ui.theme.PertamaxifyTheme
-import com.example.pertamaxify.ui.theme.Typography
-import com.example.pertamaxify.ui.theme.WhiteHint
-import com.example.pertamaxify.ui.theme.WhiteText
+import com.example.pertamaxify.ui.theme.*
+import com.example.pertamaxify.utils.JwtUtils
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
     private val viewModel: LoginViewModel by viewModels()
-
     private var isConnected by mutableStateOf(true)
-    private var errorMessage by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             PertamaxifyTheme {
                 // Observe error message from ViewModel
-                errorMessage = viewModel.errorMessage
+                val errorMessage = viewModel.errorMessage
 
                 LoginPage(
                     errorMessage = errorMessage,
+                    isLoading = viewModel.isLoading,
                     onLoginClick = { username, password ->
                         if (isConnected) {
                             if (username == "guest") {
@@ -80,6 +57,10 @@ class LoginActivity : ComponentActivity() {
                                     username, password,
                                     onSuccess = { accessToken, refreshToken ->
                                         SecurePrefs.saveTokens(this, accessToken, refreshToken)
+
+                                        // Save user to database
+                                        val jwtPayload = JwtUtils.decodeJwt(accessToken)
+
                                         navigateToHome()
                                     }
                                 )
@@ -101,10 +82,10 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun LoginPage(
     errorMessage: String?,
+    isLoading: Boolean,
     onLoginClick: (String, String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
@@ -124,7 +105,6 @@ fun LoginPage(
                 .width(360.dp)
                 .height(700.dp)
         ) {
-
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "App Logo",
@@ -165,9 +145,17 @@ fun LoginPage(
                     containerColor = GreenButton,
                     contentColor = WhiteText
                 ),
-                shape = RoundedCornerShape(48.dp)
+                shape = RoundedCornerShape(48.dp),
+                enabled = !isLoading && username.isNotEmpty() && password.isNotEmpty()
             ) {
-                Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
+                }
             }
 
             errorMessage?.let {
@@ -197,14 +185,14 @@ fun LoginPage(
                     containerColor = InputBorder,
                     contentColor = WhiteText
                 ),
-                shape = RoundedCornerShape(48.dp)
+                shape = RoundedCornerShape(48.dp),
+                enabled = !isLoading
             ) {
                 Text(text = "Login as Guest", color = WhiteText, style = Typography.titleMedium)
             }
         }
     }
 }
-
 
 @Composable
 fun TextFieldWithLabel(
@@ -224,7 +212,6 @@ fun TextFieldWithLabel(
                 .fillMaxWidth()
                 .padding(start = 4.dp, bottom = 4.dp)
         )
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
