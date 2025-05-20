@@ -91,7 +91,8 @@ class MainActivity : ComponentActivity() {
                             User(
                                 username = jwtPayload.username,
                                 email = "${jwtPayload.username}@std.stei.itb.ac.id",
-                                imageProfile = null
+                                imageProfile = null,
+                                country = "Indonesia",
                             )
                         )
                         openHomeScreen()
