@@ -39,7 +39,9 @@ fun OnlineSongItem(
     song: SongResponse,
     onSongClick: (SongResponse) -> Unit,
     type: String = "vertical",
-    rank: Int? = null
+    rank: Int? = null,
+    onDownload: ((SongResponse) -> Unit)? = null, // Add this parameter
+    email: String? = null
 ) {
     val context = LocalContext.current
     var showContextMenu by remember { mutableStateOf(false) }
@@ -60,7 +62,12 @@ fun OnlineSongItem(
                 onDismissRequest = { showContextMenu = false },
                 song = song,
                 onDownload = {
-                    DownloaderService.startDownload(context, song)
+                    // Call the passed download function or use the service directly
+                    if (onDownload != null) {
+                        onDownload(song)
+                    } else {
+                        DownloaderService.startDownload(context, song, email)
+                    }
                 }
             )
 
@@ -115,7 +122,12 @@ fun OnlineSongItem(
                 onDismissRequest = { showContextMenu = false },
                 song = song,
                 onDownload = {
-                    DownloaderService.startDownload(context, song)
+                    // Call the passed download function or use the service directly
+                    if (onDownload != null) {
+                        onDownload(song)
+                    } else {
+                        DownloaderService.startDownload(context, song, email)
+                    }
                 }
             )
 

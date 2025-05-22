@@ -32,7 +32,9 @@ fun GlobalTopSection(
     songs: List<SongResponse>,
     isLoading: Boolean,
     errorMessage: String?,
-    onSongClick: (SongResponse) -> Unit
+    onSongClick: (SongResponse) -> Unit,
+    onDownload: ((SongResponse) -> Unit)? = null,
+    email: String? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(8.dp, 4.dp)) {
         Text(
@@ -88,7 +90,9 @@ fun GlobalTopSection(
                             song = song,
                             onSongClick = onSongClick,
                             type = "horizontal",
-                            rank = index + 1
+                            rank = index + 1,
+                            onDownload = onDownload,
+                            email = email
                         )
                     }
                 }
@@ -107,7 +111,9 @@ fun CountryTopSection(
     countryName: String,
     supportedCountries: List<String>,
     getCountryName: (String) -> String,
-    onCountrySelected: (String) -> Unit
+    onCountrySelected: (String) -> Unit,
+    onDownload: ((SongResponse) -> Unit)? = null,
+    email: String? = null
 ) {
     var showCountryMenu by remember { mutableStateOf(false) }
 
@@ -202,7 +208,9 @@ fun CountryTopSection(
                             song = song,
                             onSongClick = onSongClick,
                             type = "vertical",
-                            rank = index + 1
+                            rank = index + 1,
+                            onDownload = onDownload,
+                            email = email
                         )
                     }
                 }
