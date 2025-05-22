@@ -37,6 +37,9 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE addedBy = :email AND recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
     fun getRecentlyAddedSongsByUser(email: String): List<Song>
 
+    @Query("SELECT * FROM song WHERE isDownloaded = 1 ORDER BY addedTime DESC")
+    fun getAllDownloadedSongs(): List<Song>
+
     @Upsert
     suspend fun upsertSong(song: Song)
 

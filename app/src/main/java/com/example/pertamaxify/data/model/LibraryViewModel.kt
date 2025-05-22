@@ -24,9 +24,13 @@ class LibraryViewModel @Inject constructor(
     private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
     val likedSongs: StateFlow<List<Song>> = _likedSongs
 
+    private val _downloadedSongs = MutableStateFlow<List<Song>>(emptyList())
+    val downloadedSongs: StateFlow<List<Song>> = _downloadedSongs
+
     init {
         fetchAllSongs()
         fetchLikedSongs()
+        fetchDownloadedSongs()
         Log.d("Songs:", allSongs.toString())
     }
 
@@ -42,13 +46,9 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun toggleLike(song: Song) {
-        viewModelScope.launch {
-            val updatedSong = song.copy(isLiked = !song.isLiked!!)
-            repository.updateSong(updatedSong)
-            // Reload both lists to reflect the change
-            fetchAllSongs()
-            fetchLikedSongs()
+    fun fetchDownloadedSongs() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _downloadedSongs.value = repository.getAllDownloadedSongs()
         }
     }
 
@@ -58,6 +58,17 @@ class LibraryViewModel @Inject constructor(
             // Refresh lists after saving
             fetchAllSongs()
             fetchLikedSongs()
+            fetchDownloadedSongs()
+        }
+    }
+    fun toggleLike(song: Song) {
+        viewModelScope.launch {
+            val updatedSong = song.copy(isLiked = !song.isLiked!!)
+            repository.updateSong(updatedSong)
+            // Reload both lists to reflect the change
+            fetchAllSongs()
+            fetchLikedSongs()
+            fetchDownloadedSongs()
         }
     }
 }

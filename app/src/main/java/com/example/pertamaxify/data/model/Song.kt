@@ -23,6 +23,8 @@ data class Song(
 
     val duration: Int? = null, // Duration in seconds
 
+    val numberOfPlay: Int? = 0, // Number of times the song has been played
+
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0
 )

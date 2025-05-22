@@ -17,11 +17,19 @@ object ApiClient {
         .build()
 
     val instance: AuthService by lazy {
-        Retrofit.Builder()
+        createService(AuthService::class.java)
+    }
+
+    val songService: SongService by lazy {
+        createService(SongService::class.java)
+    }
+
+    private fun <T> createService(serviceClass: Class<T>): T {
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
-            .create(AuthService::class.java)
+            .create(serviceClass)
     }
 }

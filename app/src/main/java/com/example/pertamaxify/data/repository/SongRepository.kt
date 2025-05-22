@@ -23,6 +23,8 @@ class SongRepository @Inject constructor(
 
     fun getRecentlyAddedSongsByUser(email: String): List<Song> = songDao.getRecentlyAddedSongsByUser(email)
 
+    fun getAllDownloadedSongs(): List<Song> = songDao.getAllDownloadedSongs()
+
     suspend fun upsertSong(song: Song) {
         songDao.upsertSong(song)
     }

@@ -10,7 +10,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
+import com.example.pertamaxify.data.model.PlaylistViewModel
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.data.model.SongResponse
+import com.example.pertamaxify.ui.song.CountryTopSection
+import com.example.pertamaxify.ui.song.GlobalTopSection
+import com.example.pertamaxify.ui.song.NewSongsSection
 import com.example.pertamaxify.ui.song.RecentlyPlayedSection
 import com.example.pertamaxify.utils.JwtUtils
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,8 +28,10 @@ import androidx.compose.material3.TextButton
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    playlistViewModel: PlaylistViewModel = hiltViewModel(),
     selectedSong: Song?,
-    onSongSelected: (Song) -> Unit
+    onSongSelected: (Song) -> Unit,
+    onOnlineSongSelected: (SongResponse) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -47,10 +54,21 @@ fun HomeScreen(
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
     val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
+    // Playlist data
+    val globalTopSongs by playlistViewModel.globalTopSongs.collectAsState()
+    val countryTopSongs by playlistViewModel.countryTopSongs.collectAsState()
+    val selectedCountry by playlistViewModel.selectedCountry
+    val isLoadingGlobal by playlistViewModel.isLoadingGlobal
+    val isLoadingCountry by playlistViewModel.isLoadingCountry
+    val globalErrorMessage by playlistViewModel.globalErrorMessage
+    val countryErrorMessage by playlistViewModel.countryErrorMessage
+
     // This effect will run whenever the HomeScreen is displayed
     LaunchedEffect(Unit) {
         // Refresh data when screen is shown
         viewModel.refreshAllData()
+        playlistViewModel.fetchGlobalTopSongs()
+        playlistViewModel.fetchCountryTopSongs(selectedCountry)
     }
 
     // Delete confirmation dialog
@@ -95,42 +113,79 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp, 24.dp)
     ) {
-        NewSongsSection(
-            songs = recentlyAddedSongs,
+        // Global Top 50 Section
+        GlobalTopSection(
+            songs = globalTopSongs,
+            isLoading = isLoadingGlobal,
+            errorMessage = globalErrorMessage,
             onSongClick = { song ->
-                // Update recently played timestamp when song is clicked
-                viewModel.updateSongPlayedTimestamp(song, email)
-                // Notify parent that song was selected
-                onSongSelected(song)
-            },
-            onToggleLike = { song ->
-                viewModel.toggleLikeSong(song)
-            },
-            onDeleteSong = { song ->
-                // Show confirmation dialog
-                songToDelete = song
-                showDeleteDialog = true
+                onOnlineSongSelected(song)
             }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        RecentlyPlayedSection(
-            songs = recentlyPlayedSongs,
+        // Country Top 10 Section
+        CountryTopSection(
+            songs = countryTopSongs,
+            isLoading = isLoadingCountry,
+            errorMessage = countryErrorMessage,
             onSongClick = { song ->
-                // Update recently played timestamp when song is clicked
-                viewModel.updateSongPlayedTimestamp(song, email)
-                // Notify parent that song was selected
-                onSongSelected(song)
+                onOnlineSongSelected(song)
             },
-            onToggleLike = { song ->
-                viewModel.toggleLikeSong(song)
-            },
-            onDeleteSong = { song ->
-                // Show confirmation dialog
-                songToDelete = song
-                showDeleteDialog = true
+            selectedCountry = selectedCountry,
+            countryName = playlistViewModel.getCountryName(selectedCountry),
+            supportedCountries = playlistViewModel.getSupportedCountries(),
+            getCountryName = { playlistViewModel.getCountryName(it) },
+            onCountrySelected = { countryCode ->
+                playlistViewModel.fetchCountryTopSongs(countryCode)
             }
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Your locally stored songs
+        if (recentlyAddedSongs.isNotEmpty()) {
+            NewSongsSection(
+                songs = recentlyAddedSongs,
+                onSongClick = { song ->
+                    // Update recently played timestamp when song is clicked
+                    viewModel.updateSongPlayedTimestamp(song, email)
+                    // Notify parent that song was selected
+                    onSongSelected(song)
+                },
+                onToggleLike = { song ->
+                    viewModel.toggleLikeSong(song)
+                },
+                onDeleteSong = { song ->
+                    // Show confirmation dialog
+                    songToDelete = song
+                    showDeleteDialog = true
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Your recently played songs
+        if (recentlyPlayedSongs.isNotEmpty()) {
+            RecentlyPlayedSection(
+                songs = recentlyPlayedSongs,
+                onSongClick = { song ->
+                    // Update recently played timestamp when song is clicked
+                    viewModel.updateSongPlayedTimestamp(song, email)
+                    // Notify parent that song was selected
+                    onSongSelected(song)
+                },
+                onToggleLike = { song ->
+                    viewModel.toggleLikeSong(song)
+                },
+                onDeleteSong = { song ->
+                    // Show confirmation dialog
+                    songToDelete = song
+                    showDeleteDialog = true
+                }
+            )
+        }
     }
 }

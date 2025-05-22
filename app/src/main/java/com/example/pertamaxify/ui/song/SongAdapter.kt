@@ -6,9 +6,7 @@ import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.song.SongViewHolder
 
-class SongAdapter(
-    private val onToggleLike: (Song) -> Unit
-) : RecyclerView.Adapter<SongViewHolder>() {
+class SongAdapter : RecyclerView.Adapter<SongViewHolder>() {
 
     private val songs = mutableListOf<Song>()
 
@@ -35,9 +33,7 @@ class SongAdapter(
             // Handle menu selection
             popup.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.title) {
-                    "Remove from Liked", "Add to Liked" -> {
-                        onToggleLike(song)
-                    }
+                    // Contect menu
                 }
                 true
             }

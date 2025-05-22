@@ -11,7 +11,6 @@ import com.example.pertamaxify.data.model.Song
 @Composable
 fun SongListRecyclerView(
     songs: List<Song>,
-    onToggleLike: (Song) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -20,7 +19,6 @@ fun SongListRecyclerView(
             // Create RecyclerView
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
-                adapter = SongAdapter(onToggleLike)
             }
         },
         update = { recyclerView ->

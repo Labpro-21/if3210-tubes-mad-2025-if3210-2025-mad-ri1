@@ -60,7 +60,8 @@ class LoginViewModel @Inject constructor(
                             userRepository.upsertUser(User(
                                 email = email,
                                 username = email.substringBefore("@"),
-                                imageProfile = null
+                                imageProfile = null,
+                                country = "Indonesia",
                             ))
                         }
 
