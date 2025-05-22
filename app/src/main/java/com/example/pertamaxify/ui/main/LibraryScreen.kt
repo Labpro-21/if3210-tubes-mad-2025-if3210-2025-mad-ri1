@@ -41,6 +41,12 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     // Keep track of which tab is active
     var selectedTabIndex by remember { mutableStateOf(0) }
 
+    LaunchedEffect(email) {
+        if (email.isNotEmpty()) {
+            viewModel.refreshAllData(email)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,15 +78,18 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
             AddSongDialog(
                 onDismiss = { showDialog = false },
                 onSave = { title, artist, imagePath, audioPath, email ->
-                    viewModel.saveSong(
-                        Song(
-                            title = title,
-                            artist = artist,
-                            artwork = imagePath,
-                            url = audioPath,
-                            addedBy = email
+                    if (email != null) {
+                        viewModel.saveSong(
+                            Song(
+                                title = title,
+                                artist = artist,
+                                artwork = imagePath,
+                                url = audioPath,
+                                addedBy = email
+                            ),
+                            email = email
                         )
-                    )
+                    }
                     showDialog = false
                 },
                 email = email
@@ -109,18 +118,21 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         // Based on the selected tab, show the corresponding RecyclerView
         when (selectedTabIndex) {
             0 -> {
+                viewModel.refreshAllData(email)
                 // All Songs
                 SongListRecyclerView(
                     songs = allSongs,
                 )
             }
             1 -> {
+                viewModel.refreshAllData(email)
                 // Liked Songs
                 SongListRecyclerView(
                     songs = likedSongs,
                 )
             }
             2 -> {
+                viewModel.refreshAllData(email)
                 // Downloaded Songs
                 SongListRecyclerView(
                     songs = downloadedSongs,

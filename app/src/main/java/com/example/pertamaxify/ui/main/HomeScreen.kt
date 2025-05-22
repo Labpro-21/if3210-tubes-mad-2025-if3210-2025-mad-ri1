@@ -67,7 +67,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         // Refresh data when screen is shown
-        viewModel.refreshAllData()
+        viewModel.refreshAllData(email = email)
         playlistViewModel.fetchGlobalTopSongs()
         playlistViewModel.fetchCountryTopSongs(selectedCountry)
     }
@@ -91,7 +91,7 @@ fun HomeScreen(
                 TextButton(
                     onClick = {
                         songToDelete?.let { song ->
-                            viewModel.deleteSong(song)
+                            viewModel.deleteSong(song, email)
                         }
                         showDeleteDialog = false
                         songToDelete = null
@@ -160,10 +160,8 @@ fun HomeScreen(
             NewSongsSection(
                 songs = recentlyAddedSongs,
                 onSongClick = { song ->
-                    // Update recently played timestamp when song is clicked
                     viewModel.updateSongPlayedTimestamp(song, email)
                     viewModel.increaseSongPlayCount(song)
-                    // Notify parent that song was selected
                     onSongSelected(song)
                 },
                 onToggleLike = { song ->

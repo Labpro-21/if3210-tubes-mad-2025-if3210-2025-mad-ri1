@@ -13,6 +13,9 @@ interface SongDao {
     @Query("SELECT * FROM song ORDER BY addedTime DESC")
     fun getAllSong() : List<Song>
 
+    @Query("SELECT * FROM song WHERE addedBy = :email ORDER BY addedTime DESC")
+    fun getAllSongByEmail(email: String): List<Song>
+
     @Query("SELECT * FROM song WHERE title LIKE :title")
     fun getSongByTitle(title: String): List<Song>
 
@@ -21,6 +24,9 @@ interface SongDao {
 
     @Query("SELECT * FROM song WHERE isLiked = 1 ORDER BY addedTime DESC")
     fun getAllLikedSong(): List<Song>
+
+    @Query("SELECT * FROM song WHERE isLiked = 1 AND addedBy = :email ORDER BY addedTime DESC")
+    fun getAllLikedSongByEmail(email: String): List<Song>
 
     @Query("SELECT * FROM song WHERE title LIKE :title LIMIT 1")
     fun getSong(title: String): Song
@@ -34,11 +40,14 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE addedBy IS NOT NULL ORDER BY addedTime DESC LIMIT 20")
     fun getRecentlyAddedSongs(): List<Song>
 
-    @Query("SELECT * FROM song WHERE addedBy = :email AND recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
+    @Query("SELECT * FROM song WHERE addedBy = :email AND addedTime IS NOT NULL ORDER BY addedTime DESC LIMIT 20")
     fun getRecentlyAddedSongsByUser(email: String): List<Song>
 
     @Query("SELECT * FROM song WHERE isDownloaded = 1 ORDER BY addedTime DESC")
     fun getAllDownloadedSongs(): List<Song>
+
+    @Query("SELECT * FROM song WHERE isDownloaded = 1 AND addedBy = :email ORDER BY addedTime DESC")
+    fun getAllDownloadedSongsByEmail(email: String): List<Song>
 
     @Upsert
     suspend fun upsertSong(song: Song)

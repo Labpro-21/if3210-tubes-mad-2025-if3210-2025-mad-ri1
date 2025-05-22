@@ -47,10 +47,6 @@ class HomeActivity : ComponentActivity() {
                 val homeViewModel: HomeViewModel = hiltViewModel()
                 val playlistViewModel: PlaylistViewModel = hiltViewModel()
 
-                LaunchedEffect(Unit) {
-                    homeViewModel.refreshAllData()
-                }
-
                 MainScreen(
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
@@ -70,17 +66,16 @@ fun MainScreen(
     songRepository: SongRepository
 ) {
     val context = LocalContext.current
+    val accessToken = SecurePrefs.getAccessToken(context)
+    val username: String?
+    val userEmail: String?
+    if (!accessToken.isNullOrEmpty()) {
+        val jwtPayload = JwtUtils.decodeJwt(accessToken)
+        username = jwtPayload?.username ?: ""
 
-    // Get user email from token
-    val userEmail = remember {
-        val accessToken = SecurePrefs.getAccessToken(context)
-        if (!accessToken.isNullOrEmpty()) {
-            val jwtPayload = JwtUtils.decodeJwt(accessToken)
-            val username = jwtPayload?.username ?: ""
-            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
-        } else {
-            ""
-        }
+        userEmail = "$username@std.stei.itb.ac.id"
+    } else {
+        userEmail = ""
     }
 
     var selectedTab by remember { mutableStateOf(0) }
@@ -89,10 +84,16 @@ fun MainScreen(
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
     var currentOnlineSong by remember { mutableStateOf<SongResponse?>(null) }
 
+    LaunchedEffect(userEmail) {
+        if (userEmail.isNotEmpty()) {
+            homeViewModel.refreshAllData(userEmail)
+        }
+    }
+
     // When tab selection changes to Home, refresh data
     LaunchedEffect(selectedTab) {
         if (selectedTab == 0) {
-            homeViewModel.refreshAllData()
+            homeViewModel.refreshAllData(userEmail)
             playlistViewModel.fetchGlobalTopSongs()
             playlistViewModel.fetchCountryTopSongs(playlistViewModel.selectedCountry.value)
         }

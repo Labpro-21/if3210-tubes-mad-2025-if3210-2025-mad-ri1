@@ -23,26 +23,22 @@ class HomeViewModel @Inject constructor(
     private val _recentlyAddedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyAddedSongs: StateFlow<List<Song>> = _recentlyAddedSongs
 
-    init {
-        refreshAllData()
-    }
-
     // Call this function when you want to refresh all data
-    fun refreshAllData() {
-        fetchRecentlyPlayedSongs()
-        fetchRecentlyAddedSongs()
+    fun refreshAllData(email: String) {
+        fetchRecentlyPlayedSongs(email)
+        fetchRecentlyAddedSongs(email)
     }
 
-    private fun fetchRecentlyPlayedSongs() {
+    private fun fetchRecentlyPlayedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = songRepository.getRecentlyPlayedSongs()
+            val songs = songRepository.getRecentlyPlayedSongsByUser(email)
             _recentlyPlayedSongs.value = songs
         }
     }
 
-    private fun fetchRecentlyAddedSongs() {
+    private fun fetchRecentlyAddedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = songRepository.getRecentlyAddedSongs()
+            val songs = songRepository.getRecentlyAddedSongsByUser(email)
             _recentlyAddedSongs.value = songs
         }
     }
@@ -61,7 +57,7 @@ class HomeViewModel @Inject constructor(
                 songRepository.updateSong(updatedSong)
 
                 // After updating, refresh the song lists
-                fetchRecentlyPlayedSongs()
+                fetchRecentlyPlayedSongs(email)
             } catch (e: Exception) {
                 // Handle any errors
                 e.printStackTrace()
@@ -92,11 +88,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun deleteSong(song: Song) {
+    fun deleteSong(song: Song, email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             songRepository.deleteSong(song)
-            fetchRecentlyPlayedSongs()
-            fetchRecentlyAddedSongs()
+            refreshAllData(email)
         }
     }
 }
