@@ -144,7 +144,8 @@ fun MainScreen(
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
                         songRepository = songRepository,
-                        homeViewModel = homeViewModel
+                        homeViewModel = homeViewModel,
+                        isSongFromServer = false
                     )
                 } else {
                     // Show Mini Player
@@ -178,7 +179,8 @@ fun MainScreen(
                             isPlayerVisible = false
                             // Don't save anything to database since it's an online song
                         },
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
+                        isSongFromServer = true
                     )
                 } else {
                     // Show Mini Player for online song

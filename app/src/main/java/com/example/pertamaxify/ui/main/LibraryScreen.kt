@@ -36,6 +36,7 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
     // Observe StateFlows from the VM
     val allSongs by viewModel.allSongs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
+    val downloadedSongs by viewModel.downloadedSongs.collectAsState()
 
     // Keep track of which tab is active
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -98,6 +99,11 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
                 onClick = { selectedTabIndex = 1 },
                 text = { Text("Liked") }
             )
+            Tab(
+                selected = (selectedTabIndex == 2),
+                onClick = { selectedTabIndex = 2 },
+                text = { Text("Downloaded") }
+            )
         }
 
         // Based on the selected tab, show the corresponding RecyclerView
@@ -106,14 +112,18 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
                 // All Songs
                 SongListRecyclerView(
                     songs = allSongs,
-                    onToggleLike = { song -> viewModel.toggleLike(song) }
                 )
             }
             1 -> {
                 // Liked Songs
                 SongListRecyclerView(
                     songs = likedSongs,
-                    onToggleLike = { song -> viewModel.toggleLike(song) }
+                )
+            }
+            2 -> {
+                // Downloaded Songs
+                SongListRecyclerView(
+                    songs = downloadedSongs,
                 )
             }
         }

@@ -50,7 +50,8 @@ fun MusicPlayerScreen(
     modifier: Modifier = Modifier,
     email: String? = null,
     songRepository: SongRepository? = null, // Optional repository injection
-    homeViewModel: HomeViewModel = hiltViewModel()
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    isSongFromServer: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -120,25 +121,27 @@ fun MusicPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Like button
-                IconButton(
-                    onClick = {
-                        // Toggle local state immediately for UI feedback
-                        isLiked = !isLiked
-                        // Update song in database
-                        val updatedSong = song.copy(isLiked = isLiked)
-                        homeViewModel.updateSong(updatedSong)
+                if (!isSongFromServer) {
+                    // Like button
+                    IconButton(
+                        onClick = {
+                            // Toggle local state immediately for UI feedback
+                            isLiked = !isLiked
+                            // Update song in database
+                            val updatedSong = song.copy(isLiked = isLiked)
+                            homeViewModel.updateSong(updatedSong)
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (isLiked) R.drawable.tabler_heart_filled
+                                else R.drawable.tabler_heart
+                            ),
+                            contentDescription = if (isLiked) "Unlike" else "Like",
+                            tint = if (isLiked) Color(0xFFFF80AB) else WhiteText,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (isLiked) R.drawable.tabler_heart_filled
-                            else R.drawable.tabler_heart
-                        ),
-                        contentDescription = if (isLiked) "Unlike" else "Like",
-                        tint = if (isLiked) Color(0xFFFF80AB) else WhiteText,
-                        modifier = Modifier.size(28.dp)
-                    )
                 }
 
                 // Dismiss button
