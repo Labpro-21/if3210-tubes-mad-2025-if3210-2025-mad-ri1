@@ -1,5 +1,6 @@
 package com.example.pertamaxify.ui.main
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +25,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.example.pertamaxify.services.DownloaderService
 
 @Composable
 fun HomeScreen(
@@ -63,12 +65,17 @@ fun HomeScreen(
     val globalErrorMessage by playlistViewModel.globalErrorMessage
     val countryErrorMessage by playlistViewModel.countryErrorMessage
 
-    // This effect will run whenever the HomeScreen is displayed
     LaunchedEffect(Unit) {
         // Refresh data when screen is shown
-        viewModel.refreshAllData()
+        viewModel.refreshAllData(email = email)
         playlistViewModel.fetchGlobalTopSongs()
         playlistViewModel.fetchCountryTopSongs(selectedCountry)
+    }
+
+    // Download handler
+    val handleDownload = { song: SongResponse ->
+        Log.d("HomeScreen", "Starting download for: ${song.title}")
+        DownloaderService.startDownload(context, song, email)
     }
 
     // Delete confirmation dialog
@@ -84,7 +91,7 @@ fun HomeScreen(
                 TextButton(
                     onClick = {
                         songToDelete?.let { song ->
-                            viewModel.deleteSong(song)
+                            viewModel.deleteSong(song, email)
                         }
                         showDeleteDialog = false
                         songToDelete = null
@@ -120,7 +127,9 @@ fun HomeScreen(
             errorMessage = globalErrorMessage,
             onSongClick = { song ->
                 onOnlineSongSelected(song)
-            }
+            },
+            onDownload = handleDownload,
+            email = email
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -139,7 +148,9 @@ fun HomeScreen(
             getCountryName = { playlistViewModel.getCountryName(it) },
             onCountrySelected = { countryCode ->
                 playlistViewModel.fetchCountryTopSongs(countryCode)
-            }
+            },
+            onDownload = handleDownload,
+            email = email
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -149,9 +160,8 @@ fun HomeScreen(
             NewSongsSection(
                 songs = recentlyAddedSongs,
                 onSongClick = { song ->
-                    // Update recently played timestamp when song is clicked
                     viewModel.updateSongPlayedTimestamp(song, email)
-                    // Notify parent that song was selected
+                    viewModel.increaseSongPlayCount(song)
                     onSongSelected(song)
                 },
                 onToggleLike = { song ->
@@ -174,6 +184,7 @@ fun HomeScreen(
                 onSongClick = { song ->
                     // Update recently played timestamp when song is clicked
                     viewModel.updateSongPlayedTimestamp(song, email)
+                    viewModel.increaseSongPlayCount(song)
                     // Notify parent that song was selected
                     onSongSelected(song)
                 },

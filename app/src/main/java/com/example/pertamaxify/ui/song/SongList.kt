@@ -16,15 +16,16 @@ fun SongListRecyclerView(
 
     AndroidView(
         factory = {
-            // Create RecyclerView
             RecyclerView(context).apply {
                 layoutManager = LinearLayoutManager(context)
+                adapter = SongAdapter()
             }
         },
         update = { recyclerView ->
-            // Update adapter’s list when `songs` changes
-            val songAdapter = recyclerView.adapter as SongAdapter
+            val songAdapter = (recyclerView.adapter as? SongAdapter)
+                ?: SongAdapter().also { recyclerView.adapter = it }
             songAdapter.submitList(songs)
         }
     )
 }
+

@@ -1,6 +1,6 @@
 package com.example.pertamaxify.data.model
 
-import androidx.compose.runtime.mutableStateOf
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.repository.SongRepository
@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
 
@@ -24,30 +23,22 @@ class HomeViewModel @Inject constructor(
     private val _recentlyAddedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyAddedSongs: StateFlow<List<Song>> = _recentlyAddedSongs
 
-    // Flag to track when data should be refreshed
-    private val _dataRefreshNeeded = mutableStateOf(true)
-
-    init {
-        refreshAllData()
-    }
-
     // Call this function when you want to refresh all data
-    fun refreshAllData() {
-        fetchRecentlyPlayedSongs()
-        fetchRecentlyAddedSongs()
-        _dataRefreshNeeded.value = false
+    fun refreshAllData(email: String) {
+        fetchRecentlyPlayedSongs(email)
+        fetchRecentlyAddedSongs(email)
     }
 
-    fun fetchRecentlyPlayedSongs() {
+    private fun fetchRecentlyPlayedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = songRepository.getRecentlyPlayedSongs()
+            val songs = songRepository.getRecentlyPlayedSongsByUser(email)
             _recentlyPlayedSongs.value = songs
         }
     }
 
-    fun fetchRecentlyAddedSongs() {
+    private fun fetchRecentlyAddedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = songRepository.getRecentlyAddedSongs()
+            val songs = songRepository.getRecentlyAddedSongsByUser(email)
             _recentlyAddedSongs.value = songs
         }
     }
@@ -66,11 +57,21 @@ class HomeViewModel @Inject constructor(
                 songRepository.updateSong(updatedSong)
 
                 // After updating, refresh the song lists
-                fetchRecentlyPlayedSongs()
+                fetchRecentlyPlayedSongs(email)
             } catch (e: Exception) {
                 // Handle any errors
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun increaseSongPlayCount(song: Song) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedSong = song.copy(
+                numberOfPlay = song.numberOfPlay?.plus(1)
+            )
+            songRepository.updateSong(updatedSong)
+            Log.d("HomeViewModel", "Play count updated for song: ${song.title} to ${updatedSong.numberOfPlay}")
         }
     }
 
@@ -87,21 +88,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun deleteSong(song: Song) {
+    fun deleteSong(song: Song, email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             songRepository.deleteSong(song)
-            fetchRecentlyPlayedSongs()
-            fetchRecentlyAddedSongs()
+            refreshAllData(email)
         }
-    }
-
-    // Mark that data needs to be refreshed (call this when navigating to HomeScreen)
-    fun markDataRefreshNeeded() {
-        _dataRefreshNeeded.value = true
-    }
-
-    // Check if data refresh is needed
-    fun isDataRefreshNeeded(): Boolean {
-        return _dataRefreshNeeded.value
     }
 }

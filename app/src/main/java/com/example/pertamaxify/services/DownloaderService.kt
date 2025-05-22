@@ -40,10 +40,12 @@ class DownloaderService : Service() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
+        Log.d("DownloaderService", "Service Created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
+            Log.d("DownloaderService", "Service Started with action: ${it.action}")
             when (it.action) {
                 ACTION_DOWNLOAD_SONG -> {
                     val songId = it.getIntExtra(EXTRA_SONG_ID, -1)
@@ -52,9 +54,10 @@ class DownloaderService : Service() {
                     val artwork = it.getStringExtra(EXTRA_SONG_ARTWORK)
                     val url = it.getStringExtra(EXTRA_SONG_URL)
                     val duration = it.getIntExtra(EXTRA_SONG_DURATION, 0)
+                    val email = it.getStringExtra(EXTRA_EMAIL)
 
                     if (songId != -1 && url != null) {
-                        downloadSong(songId, title, artist, artwork, url, duration)
+                        downloadSong(songId, title, artist, artwork, url, duration, email)
                     }
                 }
             }
@@ -73,16 +76,18 @@ class DownloaderService : Service() {
         return START_NOT_STICKY
     }
 
-    private fun downloadSong(
+    fun downloadSong(
         songId: Int,
         title: String,
         artist: String,
         artwork: String?,
         url: String,
-        duration: Int
+        duration: Int,
+        email: String? = null
     ) {
         serviceScope.launch {
             try {
+                Log.d("DownloaderService", "Downloading song: $title from $url")
                 // Update notification to show progress
                 updateNotification("Downloading $title", "Starting download...")
 
@@ -135,7 +140,8 @@ class DownloaderService : Service() {
                     url = destFile.absolutePath,
                     duration = duration,
                     isDownloaded = true,
-                    addedTime = Date()
+                    addedTime = Date(),
+                    addedBy = email
                 )
 
                 songRepository.upsertSong(song)
@@ -148,6 +154,8 @@ class DownloaderService : Service() {
                     kotlinx.coroutines.delay(3000)
                     stopSelf()
                 }
+
+                Log.d("DownloaderService", "Download completed: $title")
 
             } catch (e: Exception) {
                 Log.e("DownloaderService", "Error downloading song", e)
@@ -176,7 +184,7 @@ class DownloaderService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Download Channel"
             val descriptionText = "Channel for music download notifications"
-            val importance = NotificationManager.IMPORTANCE_LOW
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
             }
@@ -194,10 +202,12 @@ class DownloaderService : Service() {
         const val EXTRA_SONG_ARTWORK = "com.example.pertamaxify.extra.SONG_ARTWORK"
         const val EXTRA_SONG_URL = "com.example.pertamaxify.extra.SONG_URL"
         const val EXTRA_SONG_DURATION = "com.example.pertamaxify.extra.SONG_DURATION"
+        const val EXTRA_EMAIL = "com.example.pertamaxify.extra.EMAIL"
 
         fun startDownload(
             context: Context,
-            songResponse: SongResponse
+            songResponse: SongResponse,
+            email: String? = null
         ) {
             val intent = Intent(context, DownloaderService::class.java).apply {
                 action = ACTION_DOWNLOAD_SONG
@@ -207,6 +217,7 @@ class DownloaderService : Service() {
                 putExtra(EXTRA_SONG_ARTWORK, songResponse.artwork)
                 putExtra(EXTRA_SONG_URL, songResponse.url)
                 putExtra(EXTRA_SONG_DURATION, songResponse.convertDurationToSeconds(songResponse.duration))
+                putExtra(EXTRA_EMAIL, email)
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

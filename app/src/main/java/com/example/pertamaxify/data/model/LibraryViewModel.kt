@@ -27,48 +27,35 @@ class LibraryViewModel @Inject constructor(
     private val _downloadedSongs = MutableStateFlow<List<Song>>(emptyList())
     val downloadedSongs: StateFlow<List<Song>> = _downloadedSongs
 
-    init {
-        fetchAllSongs()
-        fetchLikedSongs()
-        fetchDownloadedSongs()
-        Log.d("Songs:", allSongs.toString())
+    fun refreshAllData(email: String) {
+        fetchAllSongs(email)
+        fetchLikedSongs(email)
+        fetchDownloadedSongs(email)
     }
 
-    fun fetchAllSongs() {
+    fun fetchAllSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            _allSongs.value = repository.getAllSongs()
+            _allSongs.value = repository.getAllSongsByEmail(email)
         }
     }
 
-    fun fetchLikedSongs() {
+    fun fetchLikedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            _likedSongs.value = repository.getAllLikedSongs()
+            _likedSongs.value = repository.getAllLikedSongsByEmail(email)
         }
     }
 
-    fun fetchDownloadedSongs() {
+    fun fetchDownloadedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            _downloadedSongs.value = repository.getAllDownloadedSongs()
+            _downloadedSongs.value = repository.getAllDownloadedSongsByEmail(email)
         }
     }
 
-    fun saveSong(song: Song) {
+    fun saveSong(song: Song, email: String) {
         viewModelScope.launch {
             repository.upsertSong(song)
             // Refresh lists after saving
-            fetchAllSongs()
-            fetchLikedSongs()
-            fetchDownloadedSongs()
-        }
-    }
-    fun toggleLike(song: Song) {
-        viewModelScope.launch {
-            val updatedSong = song.copy(isLiked = !song.isLiked!!)
-            repository.updateSong(updatedSong)
-            // Reload both lists to reflect the change
-            fetchAllSongs()
-            fetchLikedSongs()
-            fetchDownloadedSongs()
+            refreshAllData(email = email)
         }
     }
 }
