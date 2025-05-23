@@ -3,15 +3,11 @@ package com.example.pertamaxify.ui.song
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.RecyclerView
-import coil.compose.AsyncImage
 import com.example.pertamaxify.R
+import coil.load
 import com.example.pertamaxify.data.model.Song
+import java.io.File
 
 class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val titleTextView = itemView.findViewById<TextView>(R.id.songTitle)
@@ -24,14 +20,17 @@ class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
              ) {
         titleTextView.text = song.title
         singerTextView.text = song.artist
-        // Load image using your preferred image loading library
-//        if (song.artwork != null) {
-//            imageView.setImageResource(
-//
-//            )
-//        } else {
-//            imageView.setImageResource(R.drawable.song_image_placeholder) // Placeholder image
-//        }
+
+        if (song.artwork.isNullOrBlank()) {
+            imageView.setImageResource(R.drawable.song_image_placeholder) // Placeholder image
+        } else {
+            val file = File(song.artwork.removePrefix("file://"))
+            imageView.load(file) {
+                crossfade(true)
+                placeholder(R.drawable.song_image_placeholder)
+                error(R.drawable.song_image_placeholder)
+            }
+        }
         itemView.setOnClickListener{
             onSongClick?.invoke(song)
         }

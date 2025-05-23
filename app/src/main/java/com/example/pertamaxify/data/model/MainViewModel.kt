@@ -7,8 +7,6 @@ import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-
-// Add to your existing ViewModels package
 @HiltViewModel
 class MainViewModel @Inject constructor(
 ) : ViewModel() {
