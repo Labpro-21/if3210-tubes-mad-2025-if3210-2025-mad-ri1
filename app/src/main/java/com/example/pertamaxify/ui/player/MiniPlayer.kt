@@ -51,7 +51,6 @@ fun MiniPlayer(
     song: Song?,  // Nullable to handle no song case
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
-    onLikeClick: (Boolean) -> Unit = {}   // Callback for like toggle
 ) {
     // Default to empty state if no song
     val currentSong = song ?: Song(
@@ -149,23 +148,6 @@ fun MiniPlayer(
             Row(Modifier.align(Alignment.CenterEnd)) {
                 IconButton(
                     onClick = {
-                        isLiked = !isLiked
-                        onLikeClick(isLiked)
-                    },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (isLiked) R.drawable.tabler_heart_filled
-                            else R.drawable.tabler_heart
-                        ),
-                        contentDescription = if (isLiked) "Liked" else "Not Liked",
-                        tint = WhiteText
-                    )
-                }
-
-                IconButton(
-                    onClick = {
                         isPlaying = !isPlaying
                         if (isPlaying) player.play() else player.pause()
                     },
@@ -203,9 +185,3 @@ fun MiniPlayer(
         )
     }
 }
-
-//@Preview
-//@Composable
-//fun MiniPlayerPreview() {
-//    MiniPlayer()
-//}
