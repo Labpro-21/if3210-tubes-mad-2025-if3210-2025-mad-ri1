@@ -7,7 +7,6 @@
     android:padding="16dp"
     android:gravity="center_vertical">
 
-    <!-- Image on the left -->
     <ImageView
         android:id="@+id/songArtwork"
         android:layout_width="40dp"
@@ -17,7 +16,6 @@
         android:contentDescription="@string/song_artwork"
         />
 
-    <!-- Vertical container for title and singer -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"
