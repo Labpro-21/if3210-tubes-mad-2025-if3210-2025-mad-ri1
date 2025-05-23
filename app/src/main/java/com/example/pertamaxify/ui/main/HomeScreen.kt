@@ -160,8 +160,6 @@ fun HomeScreen(
             NewSongsSection(
                 songs = recentlyAddedSongs,
                 onSongClick = { song ->
-                    viewModel.updateSongPlayedTimestamp(song, email)
-                    viewModel.increaseSongPlayCount(song)
                     onSongSelected(song)
                 },
                 onToggleLike = { song ->
@@ -182,9 +180,6 @@ fun HomeScreen(
             RecentlyPlayedSection(
                 songs = recentlyPlayedSongs,
                 onSongClick = { song ->
-                    // Update recently played timestamp when song is clicked
-                    viewModel.updateSongPlayedTimestamp(song, email)
-                    viewModel.increaseSongPlayCount(song)
                     // Notify parent that song was selected
                     onSongSelected(song)
                 },

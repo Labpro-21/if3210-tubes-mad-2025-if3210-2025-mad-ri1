@@ -1,22 +1,34 @@
 package com.example.pertamaxify.data.model
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.viewModelScope
+import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.data.repository.StatisticRepository
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    private val statisticRepository: StatisticRepository,
 ) : ViewModel() {
     val selectedSong = mutableStateOf<Song?>(null)
     val isPlayerVisible = mutableStateOf(false)
 
-    fun updateSelectedSong(song: Song) {
+    fun updateSelectedSong(song: Song, email: String) {
         viewModelScope.launch {
             selectedSong.value = song
             isPlayerVisible.value = true
+
+            statisticRepository.insertStatistic(
+                Statistic(
+                    playedBy = email,
+                    songId = song.id,
+                    playedAt = System.currentTimeMillis(),
+                )
+            )
         }
     }
 

@@ -126,12 +126,10 @@ fun LibraryScreen(
                 SongListRecyclerView(
                     songs = allSongs,
                     onSongClick = { song ->
-                        // Play the song using MainViewModel
-                        mainViewModel.updateSelectedSong(song)
+                        mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-                        // Handle like/unlike or other actions
-//                        viewModel.toggleLike(song)
+                        // Context menu
                     }
                 )
             }
@@ -140,10 +138,10 @@ fun LibraryScreen(
                 SongListRecyclerView(
                     songs = likedSongs,
                     onSongClick = { song ->
-                        mainViewModel.updateSelectedSong(song)
+                        mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-//                        viewModel.toggleLike(song)
+                        // Context menu
                     }
                 )
             }
@@ -152,10 +150,10 @@ fun LibraryScreen(
                 SongListRecyclerView(
                     songs = downloadedSongs,
                     onSongClick = { song ->
-                        mainViewModel.updateSelectedSong(song)
+                        mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-//                        viewModel.toggleLike(song)
+                        // Context menu
                     }
                 )
             }

@@ -54,8 +54,7 @@ class HomeActivity : ComponentActivity() {
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
-                    libraryViewModel = libraryViewModel,
-                    songRepository = songRepository
+                    libraryViewModel = libraryViewModel
                 )
             }
         }
@@ -67,8 +66,7 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
-    libraryViewModel: LibraryViewModel,
-    songRepository: SongRepository
+    libraryViewModel: LibraryViewModel
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -131,10 +129,8 @@ fun MainScreen(
                         // Playing a local song
                         isPlayingOnlineSong = false
                         currentOnlineSong = null
-                        mainViewModel.updateSelectedSong(newSong)
 
-                        // Also update the song's recently played time
-                        homeViewModel.updateSongPlayedTimestamp(newSong, userEmail)
+                        mainViewModel.updateSelectedSong(newSong, userEmail)
                     },
                     onOnlineSongSelected = { onlineSong ->
                         // Playing an online song
@@ -161,7 +157,6 @@ fun MainScreen(
                         onDismiss = { mainViewModel.dismissPlayer() },
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
-                        songRepository = songRepository,
                         homeViewModel = homeViewModel,
                         isSongFromServer = false
                     )
