@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.LibraryViewModel
+import com.example.pertamaxify.data.model.MainViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.song.SongListRecyclerView
@@ -18,7 +19,10 @@ import com.example.pertamaxify.ui.theme.WhiteText
 import com.example.pertamaxify.utils.JwtUtils
 
 @Composable
-fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
+fun LibraryScreen(
+    viewModel: LibraryViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -52,7 +56,7 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header row with “Your Library” and a plus icon to add a song
+        // Header row with "Your Library" and a plus icon to add a song
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
@@ -96,7 +100,7 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
             )
         }
 
-        // Create the Tabs for “All” and “Liked”
+        // Create the Tabs for "All" and "Liked"
         TabRow(selectedTabIndex = selectedTabIndex) {
             Tab(
                 selected = (selectedTabIndex == 0),
@@ -118,24 +122,39 @@ fun LibraryScreen(viewModel: LibraryViewModel = hiltViewModel()) {
         // Based on the selected tab, show the corresponding RecyclerView
         when (selectedTabIndex) {
             0 -> {
-                viewModel.refreshAllData(email)
                 // All Songs
                 SongListRecyclerView(
                     songs = allSongs,
+                    onSongClick = { song ->
+                        mainViewModel.updateSelectedSong(song, email)
+                    },
+                    onSongLongClick = { song ->
+                        // Context menu
+                    }
                 )
             }
             1 -> {
-                viewModel.refreshAllData(email)
                 // Liked Songs
                 SongListRecyclerView(
                     songs = likedSongs,
+                    onSongClick = { song ->
+                        mainViewModel.updateSelectedSong(song, email)
+                    },
+                    onSongLongClick = { song ->
+                        // Context menu
+                    }
                 )
             }
             2 -> {
-                viewModel.refreshAllData(email)
                 // Downloaded Songs
                 SongListRecyclerView(
                     songs = downloadedSongs,
+                    onSongClick = { song ->
+                        mainViewModel.updateSelectedSong(song, email)
+                    },
+                    onSongLongClick = { song ->
+                        // Context menu
+                    }
                 )
             }
         }

@@ -5,7 +5,7 @@ import com.example.pertamaxify.db.SongDao
 import javax.inject.Inject
 
 class SongRepository @Inject constructor(
-    private val songDao: SongDao
+    private val songDao: SongDao,
 ) {
     fun getAllSongs(): List<Song> = songDao.getAllSong()
 
@@ -13,15 +13,11 @@ class SongRepository @Inject constructor(
 
     fun getSongByTitle(title: String): List<Song> = songDao.getSongByTitle(title)
 
-    fun getSongById(id: String): Song = songDao.getSongById(id)
+    fun getSongById(id: Int): Song = songDao.getSongById(id)
 
     fun getAllLikedSongs(): List<Song> = songDao.getAllLikedSong()
 
     fun getAllLikedSongsByEmail(email: String): List<Song> = songDao.getAllLikedSongByEmail(email)
-
-    fun getRecentlyPlayedSongs(): List<Song> = songDao.getRecentlyPlayedSongs()
-
-    fun getRecentlyPlayedSongsByUser(email: String): List<Song> = songDao.getRecentlyPlayedSongsByUser(email)
 
     fun getRecentlyAddedSongs(): List<Song> = songDao.getRecentlyAddedSongs()
 

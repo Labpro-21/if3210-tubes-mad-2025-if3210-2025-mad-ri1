@@ -20,7 +20,7 @@ interface SongDao {
     fun getSongByTitle(title: String): List<Song>
 
     @Query("SELECT * FROM song WHERE id = :id")
-    fun getSongById(id: String): Song
+    fun getSongById(id: Int): Song
 
     @Query("SELECT * FROM song WHERE isLiked = 1 ORDER BY addedTime DESC")
     fun getAllLikedSong(): List<Song>
@@ -30,12 +30,6 @@ interface SongDao {
 
     @Query("SELECT * FROM song WHERE title LIKE :title LIMIT 1")
     fun getSong(title: String): Song
-
-    @Query("SELECT * FROM song WHERE recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
-    fun getRecentlyPlayedSongs(): List<Song>
-
-    @Query("SELECT * FROM song WHERE addedBy = :email AND recentlyPlayed IS NOT NULL ORDER BY recentlyPlayed DESC LIMIT 20")
-    fun getRecentlyPlayedSongsByUser(email: String): List<Song>
 
     @Query("SELECT * FROM song WHERE addedBy IS NOT NULL ORDER BY addedTime DESC LIMIT 20")
     fun getRecentlyAddedSongs(): List<Song>

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.data.repository.StatisticRepository
 import com.example.pertamaxify.data.repository.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -55,6 +56,18 @@ object DatabaseModule {
     @Singleton
     fun provideAuthRepository(): AuthRepository {
         return AuthRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStatisticDao(database: AppDatabase): StatisticDao {
+        return database.statisticDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStatisticRepository(statisticDao: StatisticDao): StatisticRepository {
+        return StatisticRepository(statisticDao)
     }
 
 }

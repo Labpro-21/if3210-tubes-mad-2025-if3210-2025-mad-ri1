@@ -1,7 +1,9 @@
 package com.example.pertamaxify.ui.main
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
+import com.example.pertamaxify.data.model.LibraryViewModel
 import com.example.pertamaxify.data.model.MainViewModel
 import com.example.pertamaxify.data.model.PlaylistViewModel
 import com.example.pertamaxify.data.model.Song
@@ -38,7 +41,6 @@ class HomeActivity : ComponentActivity() {
     @Inject
     lateinit var songRepository: SongRepository
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -46,12 +48,13 @@ class HomeActivity : ComponentActivity() {
                 val mainViewModel: MainViewModel = hiltViewModel()
                 val homeViewModel: HomeViewModel = hiltViewModel()
                 val playlistViewModel: PlaylistViewModel = hiltViewModel()
+                val libraryViewModel: LibraryViewModel = hiltViewModel()
 
                 MainScreen(
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
-                    songRepository = songRepository
+                    libraryViewModel = libraryViewModel
                 )
             }
         }
@@ -63,7 +66,7 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
-    songRepository: SongRepository
+    libraryViewModel: LibraryViewModel
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -72,7 +75,6 @@ fun MainScreen(
     if (!accessToken.isNullOrEmpty()) {
         val jwtPayload = JwtUtils.decodeJwt(accessToken)
         username = jwtPayload?.username ?: ""
-
         userEmail = "$username@std.stei.itb.ac.id"
     } else {
         userEmail = ""
@@ -84,18 +86,28 @@ fun MainScreen(
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
     var currentOnlineSong by remember { mutableStateOf<SongResponse?>(null) }
 
+    // Handle back press when player is visible
+    BackHandler(enabled = isPlayerVisible) {
+        mainViewModel.dismissPlayer()
+    }
+
     LaunchedEffect(userEmail) {
         if (userEmail.isNotEmpty()) {
             homeViewModel.refreshAllData(userEmail)
         }
     }
 
-    // When tab selection changes to Home, refresh data
+    // When tab selection changes, refresh data
     LaunchedEffect(selectedTab) {
-        if (selectedTab == 0) {
-            homeViewModel.refreshAllData(userEmail)
-            playlistViewModel.fetchGlobalTopSongs()
-            playlistViewModel.fetchCountryTopSongs(playlistViewModel.selectedCountry.value)
+        when (selectedTab) {
+            0 -> {
+                homeViewModel.refreshAllData(userEmail)
+                playlistViewModel.fetchGlobalTopSongs()
+                playlistViewModel.fetchCountryTopSongs(playlistViewModel.selectedCountry.value)
+            }
+            1 -> {
+                libraryViewModel.refreshAllData(userEmail)
+            }
         }
     }
 
@@ -117,10 +129,8 @@ fun MainScreen(
                         // Playing a local song
                         isPlayingOnlineSong = false
                         currentOnlineSong = null
-                        mainViewModel.updateSelectedSong(newSong)
 
-                        // Also update the song's recently played time
-                        homeViewModel.updateSongPlayedTimestamp(newSong, userEmail)
+                        mainViewModel.updateSelectedSong(newSong, userEmail)
                     },
                     onOnlineSongSelected = { onlineSong ->
                         // Playing an online song
@@ -131,7 +141,10 @@ fun MainScreen(
                         isPlayerVisible = true
                     }
                 )
-                1 -> LibraryScreen()
+                1 -> LibraryScreen(
+                    viewModel = libraryViewModel,
+                    mainViewModel = mainViewModel
+                )
                 2 -> ProfileScreen()
             }
 
@@ -144,7 +157,6 @@ fun MainScreen(
                         onDismiss = { mainViewModel.dismissPlayer() },
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
-                        songRepository = songRepository,
                         homeViewModel = homeViewModel,
                         isSongFromServer = false
                     )
@@ -178,7 +190,6 @@ fun MainScreen(
                         song = tempSong,
                         onDismiss = {
                             isPlayerVisible = false
-                            // Don't save anything to database since it's an online song
                         },
                         modifier = Modifier.align(Alignment.Center),
                         isSongFromServer = true
@@ -206,7 +217,7 @@ private fun SongResponse.convertDurationToSeconds(duration: String): Int {
             return minutes * 60 + seconds
         }
     } catch (e: Exception) {
-        // Return 0 if parsing fails
+        Log.e("SongResponse", "Error converting duration to seconds: ${e.message}")
     }
     return 0
 }

@@ -1,5 +1,6 @@
 package com.example.pertamaxify.ui.player
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -49,36 +50,18 @@ fun MusicPlayerScreen(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     email: String? = null,
-    songRepository: SongRepository? = null, // Optional repository injection
     homeViewModel: HomeViewModel = hiltViewModel(),
     isSongFromServer: Boolean = false
 ) {
     val context = LocalContext.current
 
-    // Get user email if not provided
-    val userEmail = email ?: remember {
-        val accessToken = SecurePrefs.getAccessToken(context)
-        if (!accessToken.isNullOrEmpty()) {
-            val jwtPayload = JwtUtils.decodeJwt(accessToken)
-            val username = jwtPayload?.username ?: ""
-            if (username.isNotEmpty()) "$username@std.stei.itb.ac.id" else ""
-        } else {
-            ""
-        }
-    }
-
     // Local state for like status to provide immediate UI feedback
     var isLiked by remember { mutableStateOf(song.isLiked ?: false) }
 
-    // Update recently played timestamp
     LaunchedEffect(song.id) {
-        if (songRepository != null && userEmail.isNotEmpty()) {
-            CoroutineScope(Dispatchers.IO).launch {
-                val updatedSong = song.copy(recentlyPlayed = Date())
-                songRepository.updateSong(updatedSong)
-            }
-        }
+        Log.d("MusicPlayerScreen", "Song ID: ${song.id}")
     }
+
 
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
