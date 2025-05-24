@@ -43,10 +43,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
+import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.ui.auth.LoginActivity
+import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.network.NoConnectionScreen
+import com.example.pertamaxify.ui.profile.ProfileUpdateDialog
 
 @Composable
 fun ProfileScreen() {
@@ -133,17 +136,6 @@ fun ProfileScreen() {
                         .size(120.dp)
                         .clip(CircleShape)
                 )
-
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Icon",
-                    tint = Color(0xFF007F99),
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .padding(6.dp)
-                        .clickable { showDialog = true })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -193,17 +185,40 @@ fun ProfileScreen() {
             }
         }
 
+        // Show Edit Profile Dialog
         if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Feature Not Implemented") },
-                text = { Text("This feature is not available yet.") },
-                confirmButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("OK")
-                    }
-                })
+            ProfileUpdateDialog(
+                onDismiss = { showDialog = false },
+//                onSave = { title, artist, imagePath, audioPath, email ->
+//                    if (email != null) {
+//                        viewModel.saveSong(
+//                            Song(
+//                                title = title,
+//                                artist = artist,
+//                                artwork = imagePath,
+//                                url = audioPath,
+//                                addedBy = email
+//                            ),
+//                            email = email
+//                        )
+//                    }
+//                    showDialog = false
+//                },
+//                email = email
+            )
         }
+
+//        if (showDialog) {
+//            AlertDialog(
+//                onDismissRequest = { showDialog = false },
+//                title = { Text("Feature Not Implemented") },
+//                text = { Text("This feature is not available yet.") },
+//                confirmButton = {
+//                    TextButton(onClick = { showDialog = false }) {
+//                        Text("OK")
+//                    }
+//                })
+//        }
     }
 }
 
