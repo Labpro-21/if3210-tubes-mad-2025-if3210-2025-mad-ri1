@@ -64,16 +64,32 @@ fun ProfileScreen() {
     }
 
     LaunchedEffect(isConnected) {
+        Log.d("ProfileScreen", "isConnected=$isConnected | token=${token != null}")
+
+        if (token == null && profile == null) {
+            // Treat as guest
+            profile = ProfileResponse(
+                id = "-1",
+                username = "Guest",
+                email = "",
+                profilePhoto = "dummy.png",
+                location = "Unknown",
+                createdAt = "",
+                updatedAt = ""
+            )
+
+            showNoConnection = false
+            return@LaunchedEffect
+        }
+
         if (profile == null && isConnected) {
             try {
-                token?.let {
-                    val res = client.getProfile("Bearer $it")
-                    if (res.isSuccessful) {
-                        profile = res.body()
-                        showNoConnection = false
-                    } else {
-                        Log.e("ProfileScreen", "API Error: ${res.code()}")
-                    }
+                val res = client.getProfile("Bearer $token")
+                if (res.isSuccessful) {
+                    profile = res.body()
+                    showNoConnection = false
+                } else {
+                    Log.e("ProfileScreen", "API Error: ${res.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("ProfileScreen", "Exception: ${e.localizedMessage}")
@@ -101,17 +117,17 @@ fun ProfileScreen() {
             .padding(top = 80.dp, start = 24.dp, end = 24.dp, bottom = 24.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier.size(120.dp),
-                contentAlignment = Alignment.BottomEnd
+                modifier = Modifier.size(120.dp), contentAlignment = Alignment.BottomEnd
             ) {
+                val photoUrl = profile?.profilePhoto?.let {
+                    "http://34.101.226.132:3000/uploads/profile-picture/$it"
+                } ?: "http://34.101.226.132:3000/uploads/profile-picture/dummy.png"
+
                 Image(
-                    painter = rememberAsyncImagePainter(
-                        model = "http://34.101.226.132:3000/uploads/profile-picture/${profile?.profilePhoto ?: "dummy.png"}"
-                    ),
+                    painter = rememberAsyncImagePainter(model = photoUrl),
                     contentDescription = "Profile Photo",
                     modifier = Modifier
                         .size(120.dp)
@@ -127,8 +143,7 @@ fun ProfileScreen() {
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White)
                         .padding(6.dp)
-                        .clickable { showDialog = true }
-                )
+                        .clickable { showDialog = true })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -157,11 +172,10 @@ fun ProfileScreen() {
             Spacer(modifier = Modifier.height(32.dp))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 StatColumn("123", "Songs")
-                StatColumn("45", "Liked")
+                StatColumn("-", "Liked")
                 StatColumn("678", "Listened")
             }
 
@@ -173,8 +187,7 @@ fun ProfileScreen() {
                     val intent = Intent(context, LoginActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     context.startActivity(intent)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
                 Text("Logout", color = Color.White)
             }
@@ -189,8 +202,7 @@ fun ProfileScreen() {
                     TextButton(onClick = { showDialog = false }) {
                         Text("OK")
                     }
-                }
-            )
+                })
         }
     }
 }
@@ -199,9 +211,7 @@ fun ProfileScreen() {
 fun StatColumn(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = value,
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium
+            text = value, color = Color.White, style = MaterialTheme.typography.titleMedium
         )
         Text(
             text = label,
