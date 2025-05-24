@@ -42,8 +42,4 @@ class SongRepository @Inject constructor(
     suspend fun insertSong(song: Song) {
         songDao.insertSong(song)
     }
-
-    // Specific for an user
-    fun getAllSongsByUser(username: String): List<Song> = songDao.getAllSongByUser(username)
-    fun getAllLikedSongsByUser(username: String): List<Song> = songDao.getAllLikedSongByUser(username)
 }

@@ -40,16 +40,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
+import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.network.NoConnectionScreen
+import com.example.pertamaxify.ui.statistic.Capsule
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    statisticViewModel: StatisticViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val token = SecurePrefs.getAccessToken(context)
     var profile by remember { mutableStateOf<ProfileResponse?>(null) }
@@ -190,6 +195,10 @@ fun ProfileScreen() {
                 }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
                 Text("Logout", color = Color.White)
+            }
+
+            if (!profile?.email.isNullOrBlank()) {
+                Capsule(email = profile?.email, statisticViewModel = statisticViewModel)
             }
         }
 
