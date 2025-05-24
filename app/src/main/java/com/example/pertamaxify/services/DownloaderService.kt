@@ -63,7 +63,6 @@ class DownloaderService : Service() {
             }
         }
 
-        // Show a notification to keep the service in the foreground
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Downloading Music")
             .setContentText("Download in progress")
@@ -88,10 +87,9 @@ class DownloaderService : Service() {
         serviceScope.launch {
             try {
                 Log.d("DownloaderService", "Downloading song: $title from $url")
-                // Update notification to show progress
                 updateNotification("Downloading $title", "Starting download...")
 
-                // Create directory if it doesn't exist
+                // Create directory if doesn't exist
                 val musicDir = File(applicationContext.filesDir, "music")
                 if (!musicDir.exists()) {
                     musicDir.mkdirs()
@@ -101,20 +99,17 @@ class DownloaderService : Service() {
                 val fileName = "${UUID.randomUUID()}.mp3"
                 val destFile = File(musicDir, fileName)
 
-                // Download the file
                 URL(url).openStream().use { input ->
                     FileOutputStream(destFile).use { output ->
                         input.copyTo(output)
                     }
                 }
 
-                // Create artwork directory if it doesn't exist
                 val artworkDir = File(applicationContext.filesDir, "artwork")
                 if (!artworkDir.exists()) {
                     artworkDir.mkdirs()
                 }
 
-                // Download artwork if available
                 var localArtworkPath: String? = null
                 if (!artwork.isNullOrEmpty()) {
                     val artworkFileName = "${UUID.randomUUID()}.jpg"
@@ -146,10 +141,9 @@ class DownloaderService : Service() {
 
                 songRepository.upsertSong(song)
 
-                // Update notification to show completion
+                // Update notification
                 updateNotification("Download Complete", "$title has been downloaded")
 
-                // Stop the service after a delay
                 serviceScope.launch {
                     kotlinx.coroutines.delay(3000)
                     stopSelf()
@@ -161,7 +155,6 @@ class DownloaderService : Service() {
                 Log.e("DownloaderService", "Error downloading song", e)
                 updateNotification("Download Failed", "Could not download $title")
 
-                // Stop the service after a delay
                 serviceScope.launch {
                     kotlinx.coroutines.delay(3000)
                     stopSelf()
@@ -211,7 +204,7 @@ class DownloaderService : Service() {
         ) {
             val intent = Intent(context, DownloaderService::class.java).apply {
                 action = ACTION_DOWNLOAD_SONG
-                putExtra(EXTRA_SONG_ID, songResponse.id)
+                putExtra(EXTRA_SONG_ID, songResponse.serverId)
                 putExtra(EXTRA_SONG_TITLE, songResponse.title)
                 putExtra(EXTRA_SONG_ARTIST, songResponse.artist)
                 putExtra(EXTRA_SONG_ARTWORK, songResponse.artwork)
@@ -227,7 +220,6 @@ class DownloaderService : Service() {
             }
         }
 
-        // Helper extension function for SongResponse
         private fun SongResponse.convertDurationToSeconds(duration: String): Int {
             try {
                 val parts = duration.split(":")
@@ -237,7 +229,7 @@ class DownloaderService : Service() {
                     return minutes * 60 + seconds
                 }
             } catch (e: Exception) {
-                // Return 0 if parsing fails
+                Log.e("SongResponse", "Error converting duration to seconds: ${e.message}")
             }
             return 0
         }

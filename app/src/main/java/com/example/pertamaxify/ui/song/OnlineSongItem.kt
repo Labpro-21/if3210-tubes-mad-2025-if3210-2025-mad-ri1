@@ -1,7 +1,7 @@
 package com.example.pertamaxify.ui.song
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,8 +40,8 @@ fun OnlineSongItem(
     onSongClick: (SongResponse) -> Unit,
     type: String = "vertical",
     rank: Int? = null,
-    onDownload: ((SongResponse) -> Unit)? = null, // Add this parameter
-    email: String? = null
+    onDownload: ((SongResponse) -> Unit)? = null,
+    email: String? = null,
 ) {
     val context = LocalContext.current
     var showContextMenu by remember { mutableStateOf(false) }
@@ -56,13 +56,11 @@ fun OnlineSongItem(
                     onLongClick = { showContextMenu = true }
                 )
         ) {
-            // Show context menu if long-pressed
             OnlineSongContextMenu(
                 showContextMenu = showContextMenu,
                 onDismissRequest = { showContextMenu = false },
                 song = song,
                 onDownload = {
-                    // Call the passed download function or use the service directly
                     if (onDownload != null) {
                         onDownload(song)
                     } else {
@@ -100,7 +98,7 @@ fun OnlineSongItem(
             if (rank != null) {
                 Text(
                     text = "#$rank",
-                    color = Color(0xFF1DB954), // Spotify green
+                    color = Color(0xFF1DB954),
                     maxLines = 1
                 )
             }
@@ -116,13 +114,11 @@ fun OnlineSongItem(
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Show context menu if long-pressed
             OnlineSongContextMenu(
                 showContextMenu = showContextMenu,
                 onDismissRequest = { showContextMenu = false },
                 song = song,
                 onDownload = {
-                    // Call the passed download function or use the service directly
                     if (onDownload != null) {
                         onDownload(song)
                     } else {
@@ -134,7 +130,7 @@ fun OnlineSongItem(
             if (rank != null) {
                 Text(
                     text = "$rank",
-                    color = Color(0xFF1DB954), // Spotify green
+                    color = Color(0xFF1DB954),
                     modifier = Modifier.width(32.dp)
                 )
             }
@@ -191,7 +187,6 @@ fun OnlineSongContextMenu(
         expanded = showContextMenu,
         onDismissRequest = onDismissRequest
     ) {
-        // Download song option
         DropdownMenuItem(
             text = {
                 Row {
@@ -206,6 +201,25 @@ fun OnlineSongContextMenu(
             },
             onClick = {
                 onDownload()
+                onDismissRequest()
+            }
+        )
+        // Share song option
+        DropdownMenuItem(
+            text = {
+                Row {
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.ic_share),
+//                        contentDescription = null,
+//                        tint = Color.White,
+//                        modifier = Modifier.padding(end = 8.dp)
+//                    )
+                    Log.d("OnlineSongItem", "Sharing song: ${song.title} with server ID: ${song.serverId}")
+                    Text("Share song")
+                }
+            },
+            onClick = {
+                // Share function
                 onDismissRequest()
             }
         )
