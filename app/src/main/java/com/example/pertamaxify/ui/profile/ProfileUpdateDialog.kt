@@ -59,16 +59,16 @@ import kotlinx.coroutines.launch
 fun ProfileUpdateDialog(
     onDismiss: () -> Unit,
 //    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
-//    email: String?
+    profile: ProfileResponse?
 ) {
 //    var title by remember { mutableStateOf("") }
 //    var artist by remember { mutableStateOf("") }
-//    var imageUri by remember { mutableStateOf<Uri?>(null) }
 //    var audioUri by remember { mutableStateOf<Uri?>(null) }
 
     // Main Variables
     val context = LocalContext.current
-    var profile by remember { mutableStateOf<ProfileResponse?>(null) }
+    var newProfileURI by remember { mutableStateOf<Uri?>(null) }
+    var newLocation by remember { mutableStateOf<String?>(null) }
 
 //    // State to track if metadata extraction is in progress
 //    var isExtracting by remember { mutableStateOf(false) }
@@ -76,23 +76,23 @@ fun ProfileUpdateDialog(
 //    // Coroutine scope for metadata extraction
 //    val coroutineScope = rememberCoroutineScope()
 //
-//    // Use OpenDocument for getting persistable permissions
-//    val imagePickerLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.OpenDocument()
-//    ) { uri: Uri? ->
-//        uri?.let {
-//            try {
-//                // Take persistable URI permission for the image
-//                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-//                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-//                imageUri = uri
-//            } catch (e: Exception) {
-//                Log.e("AddSongDialog", "Error taking persistable permission for image URI: $uri", e)
-//                // Store the URI anyway, we'll handle access differently
-//                imageUri = uri
-//            }
-//        }
-//    }
+    // Use OpenDocument for getting persistable permissions
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                // Take persistable URI permission for the image
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                newProfileURI = uri
+            } catch (e: Exception) {
+                Log.e("ProfileUpdateDialog", "Error taking persistable permission for image URI: $uri", e)
+                // Store the URI anyway, we'll handle access differently
+                newProfileURI = uri
+            }
+        }
+    }
 //
 //    val audioPickerLauncher = rememberLauncherForActivityResult(
 //        contract = ActivityResultContracts.OpenDocument()
@@ -158,12 +158,13 @@ fun ProfileUpdateDialog(
                 Box(
                     modifier = Modifier.size(120.dp), contentAlignment = Alignment.BottomEnd
                 ) {
+
                     val photoUrl = profile?.profilePhoto?.let {
                         "http://34.101.226.132:3000/uploads/profile-picture/$it"
                     } ?: "http://34.101.226.132:3000/uploads/profile-picture/dummy.png"
 
                     Image(
-                        painter = rememberAsyncImagePainter(model = photoUrl),
+                        painter = rememberAsyncImagePainter(model = newProfileURI ?: photoUrl),
                         contentDescription = "Profile Photo",
                         modifier = Modifier
                             .size(120.dp)
@@ -179,7 +180,7 @@ fun ProfileUpdateDialog(
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.White)
                             .padding(6.dp)
-                            .clickable { })
+                            .clickable { imagePickerLauncher.launch(arrayOf("image/*")) })
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -234,7 +235,7 @@ fun ProfileUpdateDialog(
                         modifier = Modifier.weight(1f),
 //                        enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() &&
 //                                audioUri != null
-                        enabled = false
+                        enabled = newProfileURI != null || newLocation != null
                     ) {
                         Text("Save", color = Color.White)
                     }

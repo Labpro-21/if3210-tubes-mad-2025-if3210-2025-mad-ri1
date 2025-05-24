@@ -204,7 +204,7 @@ fun ProfileScreen() {
 //                    }
 //                    showDialog = false
 //                },
-//                email = email
+                profile = profile
             )
         }
 
