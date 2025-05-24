@@ -105,6 +105,7 @@ fun MainScreen(
                 playlistViewModel.fetchGlobalTopSongs()
                 playlistViewModel.fetchCountryTopSongs(playlistViewModel.selectedCountry.value)
             }
+
             1 -> {
                 libraryViewModel.refreshAllData(userEmail)
             }
@@ -141,10 +142,12 @@ fun MainScreen(
                         isPlayerVisible = true
                     }
                 )
+
                 1 -> LibraryScreen(
                     viewModel = libraryViewModel,
                     mainViewModel = mainViewModel
                 )
+
                 2 -> ProfileScreen()
             }
 
@@ -158,7 +161,8 @@ fun MainScreen(
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
                         homeViewModel = homeViewModel,
-                        isSongFromServer = false
+                        isSongFromServer = false,
+                        serverId = -1
                     )
                 } else {
                     // Show Mini Player
@@ -192,7 +196,8 @@ fun MainScreen(
                             isPlayerVisible = false
                         },
                         modifier = Modifier.align(Alignment.Center),
-                        isSongFromServer = true
+                        isSongFromServer = true,
+                        serverId = currentOnlineSong!!.id
                     )
                 } else {
                     // Show Mini Player for online song

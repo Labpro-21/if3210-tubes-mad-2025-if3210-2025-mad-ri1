@@ -2,7 +2,10 @@ package com.example.pertamaxify.workers
 
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.remote.AuthRepository
 import kotlinx.coroutines.runBlocking
@@ -37,7 +40,10 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
 
                     Result.success()
                 } else {
-                    Log.e("TokenRefreshWorker", "Token refresh failed! Response: ${response.code()}")
+                    Log.e(
+                        "TokenRefreshWorker",
+                        "Token refresh failed! Response: ${response.code()}"
+                    )
                     Result.failure()
                 }
             } catch (e: Exception) {

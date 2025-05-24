@@ -4,7 +4,7 @@ import android.util.Log
 import java.util.Date
 
 data class SongResponse(
-    val serverId: Int,
+    val id: Int,
     val title: String,
     val artist: String,
     val artwork: String,

@@ -79,7 +79,8 @@ fun MusicPlayerScreen(
     modifier: Modifier = Modifier,
     email: String? = null,
     homeViewModel: HomeViewModel = hiltViewModel(),
-    isSongFromServer: Boolean = false
+    isSongFromServer: Boolean = false,
+    serverId: Int? = -1
 ) {
     val context = LocalContext.current
 
@@ -145,7 +146,7 @@ fun MusicPlayerScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (isSongFromServer) {
                         IconButton(onClick = {
-                            val shareLink = "purrytify://song/${song.id}"
+                            val shareLink = "purrytify://song/${serverId}"
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 putExtra(Intent.EXTRA_TEXT, shareLink)
                                 type = "text/plain"

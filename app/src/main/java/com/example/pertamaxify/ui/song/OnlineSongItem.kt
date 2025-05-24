@@ -53,9 +53,7 @@ fun OnlineSongItem(
                 .padding(8.dp)
                 .combinedClickable(
                     onClick = { onSongClick(song) },
-                    onLongClick = { showContextMenu = true }
-                )
-        ) {
+                    onLongClick = { showContextMenu = true })) {
             OnlineSongContextMenu(
                 showContextMenu = showContextMenu,
                 onDismissRequest = { showContextMenu = false },
@@ -66,14 +64,11 @@ fun OnlineSongItem(
                     } else {
                         DownloaderService.startDownload(context, song, email)
                     }
-                }
-            )
+                })
 
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(song.artwork)
-                    .crossfade(true)
-                    .build(),
+                model = ImageRequest.Builder(LocalContext.current).data(song.artwork)
+                    .crossfade(true).build(),
                 contentDescription = "Song artwork",
                 modifier = Modifier
                     .width(100.dp)
@@ -82,10 +77,7 @@ fun OnlineSongItem(
             )
 
             Text(
-                text = song.title,
-                color = WhiteText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = song.title, color = WhiteText, maxLines = 1, overflow = TextOverflow.Ellipsis
             )
 
             Text(
@@ -97,9 +89,7 @@ fun OnlineSongItem(
 
             if (rank != null) {
                 Text(
-                    text = "#$rank",
-                    color = Color(0xFF1DB954),
-                    maxLines = 1
+                    text = "#$rank", color = Color(0xFF1DB954), maxLines = 1
                 )
             }
         }
@@ -109,11 +99,9 @@ fun OnlineSongItem(
                 .fillMaxWidth()
                 .combinedClickable(
                     onClick = { onSongClick(song) },
-                    onLongClick = { showContextMenu = true }
-                )
+                    onLongClick = { showContextMenu = true })
                 .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+            verticalAlignment = Alignment.CenterVertically) {
             OnlineSongContextMenu(
                 showContextMenu = showContextMenu,
                 onDismissRequest = { showContextMenu = false },
@@ -124,22 +112,17 @@ fun OnlineSongItem(
                     } else {
                         DownloaderService.startDownload(context, song, email)
                     }
-                }
-            )
+                })
 
             if (rank != null) {
                 Text(
-                    text = "$rank",
-                    color = Color(0xFF1DB954),
-                    modifier = Modifier.width(32.dp)
+                    text = "$rank", color = Color(0xFF1DB954), modifier = Modifier.width(32.dp)
                 )
             }
 
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(song.artwork)
-                    .crossfade(true)
-                    .build(),
+                model = ImageRequest.Builder(LocalContext.current).data(song.artwork)
+                    .crossfade(true).build(),
                 contentDescription = "Song artwork",
                 modifier = Modifier
                     .width(60.dp)
@@ -168,9 +151,7 @@ fun OnlineSongItem(
             }
 
             Text(
-                text = song.duration,
-                color = Color.Gray,
-                modifier = Modifier.padding(end = 8.dp)
+                text = song.duration, color = Color.Gray, modifier = Modifier.padding(end = 8.dp)
             )
         }
     }
@@ -184,44 +165,39 @@ fun OnlineSongContextMenu(
     onDownload: () -> Unit
 ) {
     DropdownMenu(
-        expanded = showContextMenu,
-        onDismissRequest = onDismissRequest
+        expanded = showContextMenu, onDismissRequest = onDismissRequest
     ) {
-        DropdownMenuItem(
-            text = {
-                Row {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_download),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    Text("Download song")
-                }
-            },
-            onClick = {
-                onDownload()
-                onDismissRequest()
+        DropdownMenuItem(text = {
+            Row {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_download),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Download song")
             }
-        )
+        }, onClick = {
+            onDownload()
+            onDismissRequest()
+        })
         // Share song option
-        DropdownMenuItem(
-            text = {
-                Row {
+        DropdownMenuItem(text = {
+            Row {
 //                    Icon(
 //                        painter = painterResource(id = R.drawable.ic_share),
 //                        contentDescription = null,
 //                        tint = Color.White,
 //                        modifier = Modifier.padding(end = 8.dp)
 //                    )
-                    Log.d("OnlineSongItem", "Sharing song: ${song.title} with server ID: ${song.serverId}")
-                    Text("Share song")
-                }
-            },
-            onClick = {
-                // Share function
-                onDismissRequest()
+                Log.d(
+                    "OnlineSongItem", "Sharing song: ${song.title} with server ID: ${song.id}"
+                )
+                Text("Share song")
             }
-        )
+        }, onClick = {
+            // Share function
+            onDismissRequest()
+        })
     }
 }
