@@ -16,11 +16,8 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
     override fun doWork(): Result {
         Log.d("TokenRefreshWorker", "Worker started. Checking token validity...")
 
-        val currentToken = SecurePrefs.getAccessToken(applicationContext)
+//        val currentToken = SecurePrefs.getAccessToken(applicationContext)
         val refreshToken = SecurePrefs.getRefreshToken(applicationContext)
-
-        Log.d("TokenRefreshWorker", "Current Access Token: $currentToken")
-        Log.d("TokenRefreshWorker", "Current Refresh Token: $refreshToken")
 
         if (refreshToken.isNullOrEmpty()) {
             Log.e("TokenRefreshWorker", "No refresh token found! Stopping worker.")
@@ -34,9 +31,6 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
                 if (response.isSuccessful && response.body() != null) {
                     val newAccessToken = response.body()!!.accessToken
                     val newRefreshToken = response.body()!!.refreshToken
-
-                    Log.d("TokenRefreshWorker", "New Access Token: $newAccessToken")
-                    Log.d("TokenRefreshWorker", "New Refresh Token: $newRefreshToken")
 
                     SecurePrefs.saveTokens(applicationContext, newAccessToken, newRefreshToken)
                     Log.d("TokenRefreshWorker", "Tokens updated successfully!")

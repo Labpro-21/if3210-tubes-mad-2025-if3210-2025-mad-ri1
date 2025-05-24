@@ -111,10 +111,11 @@ fun MusicPlayerScreen(
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                    val temp = selectedDevice
                     selectedDevice = null
                     Toast.makeText(
                         context,
-                        "Perangkat terputus, kembali ke speaker internal",
+                        "Output Device $temp disconected",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -323,77 +324,96 @@ fun DeviceSelectionDialog(
 ) {
     val context = LocalContext.current
     val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
-    val outputDevices = remember { mutableStateListOf<AudioDeviceInfo>() }
+
+    data class DeviceEntry(val info: AudioDeviceInfo, val label: String)
+
+    val deviceEntries = remember { mutableStateListOf<DeviceEntry>() }
     var selectedDevice by remember { mutableStateOf<AudioDeviceInfo?>(null) }
 
     LaunchedEffect(Unit) {
         val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
 
-        devices.forEach { device ->
+        devices.forEach { d ->
             Log.d(
-                "AudioDevice",
-                "Detected Device: ${device.productName} | Type: ${device.type} | IsSink: ${device.isSink}"
+                "AudioDevice", "Detected  ${d.productName}  | id=${d.id}  | type=${d.type}"
             )
         }
 
-        outputDevices.clear()
-        outputDevices.addAll(devices)
-
-        selectedDevice = devices.find { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
-            ?: devices.firstOrNull()
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
-            selectedDevice?.let { onDeviceSelected(it) }
-            onDismiss()
-        }) {
-            Text("Choose", color = WhiteText)
+        val nameBuckets: MutableMap<String, MutableList<AudioDeviceInfo>> = mutableMapOf()
+        devices.forEach { d ->
+            val key = d.productName?.toString() ?: "Unknown Device"
+            nameBuckets.getOrPut(key) { mutableListOf() }.add(d)
         }
-    }, dismissButton = {
-        TextButton(onClick = onDismiss) {
-            Text("Cancel", color = WhiteHint)
-        }
-    }, title = {
-        Text("Output Device", color = WhiteText)
-    }, text = {
-        Column {
-            outputDevices.forEach { device ->
-                val label = when (device.type) {
-                    AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "This Device"
-                    else -> device.productName?.toString() ?: "Unknown Device"
-                }
 
-                val isConnected = selectedDevice?.id == device.id
-                val statusText = if (isConnected) "(Connected)" else "(Disconnected)"
-                val statusColor = if (isConnected) Color.Green else Color.Gray
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { selectedDevice = device }
-                        .padding(vertical = 6.dp)) {
-                    RadioButton(
-                        selected = selectedDevice?.id == device.id,
-                        onClick = { selectedDevice = device },
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = WhiteText, unselectedColor = WhiteHint
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(label, color = WhiteText)
-                        Text(
-                            statusText,
-                            color = statusColor,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+        val entries = mutableListOf<DeviceEntry>()
+        nameBuckets.forEach { (name, list) ->
+            if (list.size == 1) {
+                val info = list.first()
+                val finalLabel =
+                    if (info.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) "This Device"
+                    else name
+                entries += DeviceEntry(info, finalLabel)
+            } else {
+                list.forEachIndexed { idx, info ->
+                    val numbered = "$name #${idx + 1}"
+                    entries += DeviceEntry(info, numbered)
                 }
             }
         }
-    }, containerColor = RedBackground, textContentColor = WhiteText
-    )
+
+        deviceEntries.clear()
+        deviceEntries.addAll(entries)
+
+        selectedDevice =
+            entries.firstOrNull { it.info.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }?.info
+                ?: entries.firstOrNull()?.info
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                selectedDevice?.let(onDeviceSelected)
+                onDismiss()
+            }) { Text("Choose", color = WhiteText) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = WhiteHint) }
+        },
+        title = { Text("Output Device", color = WhiteText) },
+        containerColor = RedBackground,
+        textContentColor = WhiteText,
+        text = {
+            Column {
+                deviceEntries.forEach { entry ->
+                    val isChecked = selectedDevice?.id == entry.info.id
+                    val statusText = if (isChecked) "(Connected)" else "(Disconnected)"
+                    val statusColor = if (isChecked) Color.Green else Color.Gray
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedDevice = entry.info }
+                            .padding(vertical = 6.dp)) {
+                        RadioButton(
+                            selected = isChecked,
+                            onClick = { selectedDevice = entry.info },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = WhiteText, unselectedColor = WhiteHint
+                            )
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(entry.label, color = WhiteText)
+                            Text(
+                                statusText,
+                                color = statusColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
+            }
+        })
 }
