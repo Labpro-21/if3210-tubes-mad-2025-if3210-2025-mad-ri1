@@ -78,7 +78,8 @@ class PlaylistViewModel @Inject constructor(
                 _countryTopSongs.value = songs
 
                 if (songs.isEmpty()) {
-                    countryErrorMessage.value = "No songs found for ${playlistRepository.countryNames[countryCode] ?: countryCode}."
+                    countryErrorMessage.value =
+                        "No songs found for ${playlistRepository.countryNames[countryCode] ?: countryCode}."
                 }
             } catch (e: Exception) {
                 countryErrorMessage.value = "Error loading country playlist: ${e.message}"

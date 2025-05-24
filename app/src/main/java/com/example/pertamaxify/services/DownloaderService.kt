@@ -63,12 +63,10 @@ class DownloaderService : Service() {
             }
         }
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Downloading Music")
-            .setContentText("Download in progress")
-            .setSmallIcon(R.drawable.ic_download)
-            .setProgress(0, 0, true)
-            .build()
+        val notification =
+            NotificationCompat.Builder(this, channelId).setContentTitle("Downloading Music")
+                .setContentText("Download in progress").setSmallIcon(R.drawable.ic_download)
+                .setProgress(0, 0, true).build()
 
         startForeground(notificationId, notification)
 
@@ -164,11 +162,8 @@ class DownloaderService : Service() {
     }
 
     private fun updateNotification(title: String, content: String) {
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_download)
-            .build()
+        val notification = NotificationCompat.Builder(this, channelId).setContentTitle(title)
+            .setContentText(content).setSmallIcon(R.drawable.ic_download).build()
 
         notificationManager.notify(notificationId, notification)
     }
@@ -198,26 +193,23 @@ class DownloaderService : Service() {
         const val EXTRA_EMAIL = "com.example.pertamaxify.extra.EMAIL"
 
         fun startDownload(
-            context: Context,
-            songResponse: SongResponse,
-            email: String? = null
+            context: Context, songResponse: SongResponse, email: String? = null
         ) {
             val intent = Intent(context, DownloaderService::class.java).apply {
                 action = ACTION_DOWNLOAD_SONG
-                putExtra(EXTRA_SONG_ID, songResponse.serverId)
+                putExtra(EXTRA_SONG_ID, songResponse.id)
                 putExtra(EXTRA_SONG_TITLE, songResponse.title)
                 putExtra(EXTRA_SONG_ARTIST, songResponse.artist)
                 putExtra(EXTRA_SONG_ARTWORK, songResponse.artwork)
                 putExtra(EXTRA_SONG_URL, songResponse.url)
-                putExtra(EXTRA_SONG_DURATION, songResponse.convertDurationToSeconds(songResponse.duration))
+                putExtra(
+                    EXTRA_SONG_DURATION,
+                    songResponse.convertDurationToSeconds(songResponse.duration)
+                )
                 putExtra(EXTRA_EMAIL, email)
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            context.startForegroundService(intent)
         }
 
         private fun SongResponse.convertDurationToSeconds(duration: String): Int {

@@ -36,7 +36,12 @@ fun GlobalTopSection(
     onDownload: ((SongResponse) -> Unit)? = null,
     email: String? = null
 ) {
-    Column(modifier = Modifier.fillMaxWidth().padding(8.dp, 4.dp)) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, 4.dp)
+    ) {
         Text(
             "Top 50 Global",
             style = MaterialTheme.typography.titleLarge,
@@ -55,6 +60,7 @@ fun GlobalTopSection(
                     CircularProgressIndicator()
                 }
             }
+
             errorMessage != null -> {
                 Box(
                     modifier = Modifier
@@ -69,6 +75,7 @@ fun GlobalTopSection(
                     )
                 }
             }
+
             songs.isEmpty() -> {
                 Box(
                     modifier = Modifier
@@ -83,6 +90,7 @@ fun GlobalTopSection(
                     )
                 }
             }
+
             else -> {
                 LazyRow {
                     itemsIndexed(songs) { index, song ->
@@ -117,7 +125,11 @@ fun CountryTopSection(
 ) {
     var showCountryMenu by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(8.dp, 4.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp, 4.dp)
+    ) {
         // Section title with country selector
         Box(
             modifier = Modifier
@@ -132,27 +144,21 @@ fun CountryTopSection(
             )
 
             OutlinedButton(
-                onClick = { showCountryMenu = true },
-                modifier = Modifier.align(Alignment.CenterEnd)
+                onClick = { showCountryMenu = true }, modifier = Modifier.align(Alignment.CenterEnd)
             ) {
                 Text("Change Country")
             }
 
             // Country selection dropdown
             DropdownMenu(
-                expanded = showCountryMenu,
-                onDismissRequest = { showCountryMenu = false }
-            ) {
+                expanded = showCountryMenu, onDismissRequest = { showCountryMenu = false }) {
                 supportedCountries.forEach { countryCode ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(getCountryName(countryCode))
-                        },
-                        onClick = {
-                            onCountrySelected(countryCode)
-                            showCountryMenu = false
-                        }
-                    )
+                    DropdownMenuItem(text = {
+                        Text(getCountryName(countryCode))
+                    }, onClick = {
+                        onCountrySelected(countryCode)
+                        showCountryMenu = false
+                    })
                 }
             }
         }
@@ -170,6 +176,7 @@ fun CountryTopSection(
                     CircularProgressIndicator()
                 }
             }
+
             errorMessage != null -> {
                 Box(
                     modifier = Modifier
@@ -184,6 +191,7 @@ fun CountryTopSection(
                     )
                 }
             }
+
             songs.isEmpty() -> {
                 Box(
                     modifier = Modifier
@@ -198,6 +206,7 @@ fun CountryTopSection(
                     )
                 }
             }
+
             else -> {
                 // Show songs as a list
                 LazyColumn(
