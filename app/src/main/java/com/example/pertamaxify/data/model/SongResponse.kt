@@ -1,24 +1,22 @@
 package com.example.pertamaxify.data.model
 
-import com.google.gson.annotations.SerializedName
+import android.util.Log
 import java.util.Date
 
 data class SongResponse(
-    val id: Int,
+    val serverId: Int,
     val title: String,
     val artist: String,
     val artwork: String,
     val url: String,
-    val duration: String, // in format "mm:ss"
+    val duration: String, // mm:ss
     val country: String,
     val rank: Int,
     val createdAt: String,
     val updatedAt: String
 ) {
-    // Convert to Song entity for local database
     fun toSong(): Song {
         return Song(
-            id = 0, // Auto-generated
             title = title,
             artist = artist,
             artwork = artwork,
@@ -40,7 +38,7 @@ data class SongResponse(
                 return minutes * 60 + seconds
             }
         } catch (e: Exception) {
-            // Return 0 if parsing fails
+            Log.e("SongResponse", "Error converting duration to seconds: ${e.message}")
         }
         return 0
     }
