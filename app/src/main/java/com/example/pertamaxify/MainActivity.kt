@@ -38,6 +38,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // deep link
+        intent?.data?.let { uri ->
+            if (uri.scheme == "purrytify" && uri.host == "song") {
+                val serverId = uri.lastPathSegment?.toIntOrNull()
+                if (serverId != null) {
+                    forwardDeepLinkToHome(serverId)
+                    return
+                }
+            }
+        }
+
         // Check for network connection
         if (!NetworkUtils.isNetworkConnected(this)) {
             // Log the network issue and go to login screen
@@ -148,4 +159,13 @@ class MainActivity : ComponentActivity() {
             finish()
         }
     }
+
+    private fun forwardDeepLinkToHome(serverId: Int) {
+        val deepLinkIntent = Intent(this, HomeActivity::class.java).apply {
+            putExtra("DEEP_LINK_SERVER_ID", serverId)
+        }
+        startActivity(deepLinkIntent)
+        finish()
+    }
 }
+

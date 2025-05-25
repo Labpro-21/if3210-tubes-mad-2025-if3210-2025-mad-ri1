@@ -43,6 +43,12 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val deepLinkId = intent.getIntExtra("DEEP_LINK_SERVER_ID", -1)
+        if (deepLinkId != -1) {
+            Log.d("Home Activity", "deeplink $deepLinkId")
+        }
+
         setContent {
             PertamaxifyTheme {
                 val mainViewModel: MainViewModel = hiltViewModel()
@@ -54,7 +60,8 @@ class HomeActivity : ComponentActivity() {
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
-                    libraryViewModel = libraryViewModel
+                    libraryViewModel = libraryViewModel,
+                    deepLinkServerId = if (deepLinkId != -1) deepLinkId else null
                 )
             }
         }
@@ -66,7 +73,8 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    deepLinkServerId: Int? = null
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -92,6 +100,15 @@ fun MainScreen(
     }
 
     LaunchedEffect(userEmail) {
+        deepLinkServerId?.let { id ->
+            val s = playlistViewModel.getSongByServerId(id)
+            if (s != null) {
+                isPlayingOnlineSong = true
+                currentOnlineSong = s
+                isPlayerVisible = true
+            }
+        }
+
         if (userEmail.isNotEmpty()) {
             homeViewModel.refreshAllData(userEmail)
         }
@@ -113,8 +130,11 @@ fun MainScreen(
     }
 
     Scaffold(
-        bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
-    ) { paddingValues ->
+        bottomBar = {
+            NavBar(
+                selectedTab,
+                onTabSelected = { selectedTab = it })
+        }) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -140,12 +160,10 @@ fun MainScreen(
 
                         // Not updating any database when playing online song
                         isPlayerVisible = true
-                    }
-                )
+                    })
 
                 1 -> LibraryScreen(
-                    viewModel = libraryViewModel,
-                    mainViewModel = mainViewModel
+                    viewModel = libraryViewModel, mainViewModel = mainViewModel
                 )
 
                 2 -> ProfileScreen()
@@ -169,8 +187,7 @@ fun MainScreen(
                     MiniPlayer(
                         song = selectedSong!!,
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        onClick = { isPlayerVisible = true }
-                    )
+                        onClick = { isPlayerVisible = true })
                 }
             }
 
@@ -204,8 +221,7 @@ fun MainScreen(
                     MiniPlayer(
                         song = tempSong,
                         modifier = Modifier.align(Alignment.BottomCenter),
-                        onClick = { isPlayerVisible = true }
-                    )
+                        onClick = { isPlayerVisible = true })
                 }
             }
         }
