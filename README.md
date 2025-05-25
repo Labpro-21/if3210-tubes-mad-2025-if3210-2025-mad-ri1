@@ -42,7 +42,8 @@
 
 ## External Links
 
-- [Spesification](https://docs.google.com/document/d/1WFKkOpWmswCLCIi4-5ptbk80FJzvuZOE/edit?tab=t.0)
+- [Spesification 1](https://docs.google.com/document/d/1WFKkOpWmswCLCIi4-5ptbk80FJzvuZOE/edit?tab=t.0)
+- [Spesification 2](https://docs.google.com/document/d/1rN3e9GcZWstXSqVxS1h78hG6sB9qLks0dq7JwjnrIyM/edit?tab=t.0)
 - [Teams](https://docs.google.com/spreadsheets/d/1B355mdQQu-cYv1FH-54gqUgATZ9_pKspCFsFTU3nAb4/edit?gid=0#gid=0)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -53,34 +54,46 @@
 
 Purritify is a music app themed around Perry the Platypus. It's an app made to explore the in's and out's of Mobile development. 
 It's made in Android Studio IDE and the native kotlin language (as if in native android not the cross platform). 
-The app itself is inspired by the popular Spotify mobile app. For the backend itself (Server) is not included in this project but provided to us instead.
+The app itself is inspired by the popular Spotify mobile app. For the backend itself (Server) is not included in this project but was provided instead.
 
 
-
-<!-- OPTIONAL LINK OR REFERENCE -->
-<!-- <p align="center">
-You can explore more on this link ...
-<br>
-<a href="https://example.com"> <Strong>THIS LINK</Strong>
-</a>
-</p> -->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 
-## Library Used
-
-Project dependencies
+## Dependencies
 
 This project is made using android studio IDE.
 
-Library Used:
+- Android Application Plugin
+- Kotlin Android Plugin
+- Kotlin Compose Plugin
+- Kotlin Symbol Processing (KSP)
+- Kotlin Annotation Processing (KAPT)
+- Hilt (Dependency Injection Plugin and libraries)
+- Jetpack Compose (UI, Material3, Tooling, Navigation)
+- Coil (Image loading for Compose)
+- Material Design Components
+- Room (Database with Kotlin Extensions and Paging support)
+- DataStore Preferences
+- WorkManager (background tasks)
+- AndroidX Media3 (ExoPlayer, UI, Session)
+- Retrofit + Gson Converter (Networking)
+- OkHttp Logging Interceptor
+- Kotlin Coroutines (Core + Android)
+- Play Services Location
+- AndroidX Camera (core, lifecycle, view)
+- Barcode Scanning
+- Accompanist Permissions
+- AndroidX Fragment KTX
 
-- Jetpack Compose
-- Google KSP
-- Google Hilt
-- etc.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+## Screenshots
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -102,8 +115,8 @@ Library Used:
 
 |   NIM    |            Name            | Preperation (Hours) | Work (Hours) |
 | :------: | :------------------------: | :-----------------: | :----------: |
-| 13522037 |    Farhan Nafis Rayhan     |       2 hours       |      14      |
-| 13522071 |   Bagas Sambega Rosyada    |       3 hours       |      20      |
-| 13522091 | Raden Francisco Trianto B. |       8 hours       |      28      |
+| 13522037 |    Farhan Nafis Rayhan     |       4 hours       |      32      |
+| 13522071 |   Bagas Sambega Rosyada    |       6 hours       |      40      |
+| 13522091 | Raden Francisco Trianto B. |       9 hours       |      37      |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
