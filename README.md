@@ -127,9 +127,9 @@ This project is made using android studio IDE.
 
 |   NIM    |            Name            | Tasks                                                                              |
 | :------: | :------------------------: | :--------------------------------------------------------------------------------- |
-| 13522037 |    Farhan Nafis Rayhan     | Mini Player, Music Player, Liked Song, Seeding                                     |
-| 13522071 |   Bagas Sambega Rosyada    | Home, Library, Music Player, Add Song, Database, Liked Song                        |
-| 13522091 | Raden Francisco Trianto B. | Setup, Splash, Navbar, Login, Profile, Background Service, Network Sensing, Readme |
+| 13522037 |    Farhan Nafis Rayhan     | Mini Player, Music Player, Liked Song, Seeding, Edit Profile, Recomendation                                     |
+| 13522071 |   Bagas Sambega Rosyada    | Home, Library, Music Player, Add Song, Database, Liked Song, Sound Capsule, Online Songs, Download Online Songs, Notification Controls                        |
+| 13522091 | Raden Francisco Trianto B. | Setup, Splash, Navbar, Login, Profile, Background Service, Network Sensing, Audio Routing, Share with URL, Share with QR, Responsive, Readme |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -139,8 +139,8 @@ This project is made using android studio IDE.
 
 |   NIM    |            Name            | Preperation (Hours) | Work (Hours) |
 | :------: | :------------------------: | :-----------------: | :----------: |
-| 13522037 |    Farhan Nafis Rayhan     |       4 hours       |      32      |
-| 13522071 |   Bagas Sambega Rosyada    |       6 hours       |      40      |
-| 13522091 | Raden Francisco Trianto B. |       9 hours       |      37      |
+| 13522037 |    Farhan Nafis Rayhan     |       4 hours       |      33      |
+| 13522071 |   Bagas Sambega Rosyada    |       6 hours       |      42      |
+| 13522091 | Raden Francisco Trianto B. |       9 hours       |      39      |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
