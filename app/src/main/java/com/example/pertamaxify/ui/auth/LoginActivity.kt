@@ -9,14 +9,38 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -24,9 +48,15 @@ import androidx.compose.ui.unit.dp
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.ui.main.HomeActivity
-import com.example.pertamaxify.ui.theme.*
-import com.example.pertamaxify.utils.JwtUtils
+import com.example.pertamaxify.ui.theme.GreenButton
+import com.example.pertamaxify.ui.theme.InputBackground
+import com.example.pertamaxify.ui.theme.InputBorder
+import com.example.pertamaxify.ui.theme.PertamaxifyTheme
+import com.example.pertamaxify.ui.theme.Typography
+import com.example.pertamaxify.ui.theme.WhiteHint
+import com.example.pertamaxify.ui.theme.WhiteText
 import dagger.hilt.android.AndroidEntryPoint
+
 
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
@@ -38,7 +68,6 @@ class LoginActivity : ComponentActivity() {
 
         setContent {
             PertamaxifyTheme {
-                // Observe error message from ViewModel
                 val errorMessage = viewModel.errorMessage
 
                 LoginPage(
@@ -47,30 +76,23 @@ class LoginActivity : ComponentActivity() {
                     onLoginClick = { username, password ->
                         if (isConnected) {
                             if (username == "guest") {
-                                // Guest login triggered
                                 Log.d("LoginActivity", "Logging in as guest")
                                 navigateToHome()
                             } else {
-                                // Normal login
                                 viewModel.login(
                                     this,
-                                    username, password,
+                                    username,
+                                    password,
                                     onSuccess = { accessToken, refreshToken ->
                                         SecurePrefs.saveTokens(this, accessToken, refreshToken)
-
-                                        // Save user to database
-                                        val jwtPayload = JwtUtils.decodeJwt(accessToken)
-
                                         navigateToHome()
-                                    }
-                                )
+                                    })
                             }
                         } else {
                             Log.d("LoginActivity", "No connection, logging in offline")
                             navigateToHome()
                         }
-                    }
-                )
+                    })
             }
         }
     }
@@ -84,9 +106,7 @@ class LoginActivity : ComponentActivity() {
 
 @Composable
 fun LoginPage(
-    errorMessage: String?,
-    isLoading: Boolean,
-    onLoginClick: (String, String) -> Unit
+    errorMessage: String?, isLoading: Boolean, onLoginClick: (String, String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -95,8 +115,7 @@ fun LoginPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp), contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -121,7 +140,8 @@ fun LoginPage(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            TextFieldWithLabel("Username", username, onValueChange = { username = it })
+            TextFieldWithLabel(
+                label = "Username", text = username, onValueChange = { username = it })
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -131,8 +151,12 @@ fun LoginPage(
                 onValueChange = { password = it },
                 isPassword = true,
                 passwordVisible = passwordVisible,
-                onTogglePasswordVisibility = { passwordVisible = !passwordVisible }
-            )
+                onTogglePasswordVisibility = { passwordVisible = !passwordVisible },
+                onDone = {
+                    if (username.isNotEmpty() && password.isNotEmpty()) {
+                        onLoginClick(username, password)
+                    }
+                })
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -142,16 +166,14 @@ fun LoginPage(
                     .width(327.dp)
                     .height(44.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = GreenButton,
-                    contentColor = WhiteText
+                    containerColor = GreenButton, contentColor = WhiteText
                 ),
                 shape = RoundedCornerShape(48.dp),
                 enabled = !isLoading && username.isNotEmpty() && password.isNotEmpty()
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White
+                        modifier = Modifier.size(24.dp), color = Color.White
                     )
                 } else {
                     Text(text = "Log In", color = WhiteText, style = Typography.titleMedium)
@@ -175,18 +197,10 @@ fun LoginPage(
 
             Button(
                 onClick = {
-                    onLoginClick(
-                        "guest",
-                        ""
-                    )
-                },  // Trigger login as guest (with empty password)
-                modifier = Modifier.width(327.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = InputBorder,
-                    contentColor = WhiteText
-                ),
-                shape = RoundedCornerShape(48.dp),
-                enabled = !isLoading
+                    onLoginClick("guest", "")
+                }, modifier = Modifier.width(327.dp), colors = ButtonDefaults.buttonColors(
+                    containerColor = InputBorder, contentColor = WhiteText
+                ), shape = RoundedCornerShape(48.dp), enabled = !isLoading
             ) {
                 Text(text = "Login as Guest", color = WhiteText, style = Typography.titleMedium)
             }
@@ -201,7 +215,8 @@ fun TextFieldWithLabel(
     onValueChange: (String) -> Unit,
     isPassword: Boolean = false,
     passwordVisible: Boolean = false,
-    onTogglePasswordVisibility: (() -> Unit)? = null
+    onTogglePasswordVisibility: (() -> Unit)? = null,
+    onDone: (() -> Unit)? = null
 ) {
     Column {
         Text(
@@ -228,6 +243,7 @@ fun TextFieldWithLabel(
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(6.dp),
+                singleLine = true,
                 visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
                 trailingIcon = if (isPassword) {
                     {
@@ -240,6 +256,11 @@ fun TextFieldWithLabel(
                         }
                     }
                 } else null,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { onDone?.invoke() }),
                 colors = TextFieldDefaults.colors(
                     focusedTextColor = WhiteText,
                     unfocusedTextColor = WhiteText,

@@ -37,6 +37,7 @@ media3UiVersion = "1.3.1"
 retrofit = "2.9.0"
 roomVersion = "2.6.1"
 securityCrypto = "1.1.0-alpha06"
+uiText = "1.8.2"
 workRuntimeKtx = "2.10.0"
 desugarJdkLibs = "2.1.3"
 playServicesLocation = "21.3.0"
@@ -71,6 +72,7 @@ androidx-room-rxjava2 = { module = "androidx.room:room-rxjava2", version.ref = "
 androidx-room-rxjava3 = { module = "androidx.room:room-rxjava3", version.ref = "roomVersion" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomVersion" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-ui-text = { module = "androidx.compose.ui:ui-text", version.ref = "uiText" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 coil = { module = "io.coil-kt:coil", version.ref = "coil" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }

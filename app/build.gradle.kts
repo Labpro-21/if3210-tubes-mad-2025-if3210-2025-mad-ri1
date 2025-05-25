@@ -92,8 +92,6 @@ dependencies {
     implementation(libs.androidx.media3.ui.v131)
     implementation(libs.androidx.media3.session)
 
-
-
     // optional - Paging 3 Integration
     implementation(libs.androidx.room.paging)
     implementation(libs.androidx.media3.exoplayer)
@@ -145,7 +143,7 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.core)
     implementation(libs.barcode.scanning)
-    implementation (libs.accompanist.permissions)
+    implementation(libs.accompanist.permissions)
 }
 
 // Allow references to generated code
