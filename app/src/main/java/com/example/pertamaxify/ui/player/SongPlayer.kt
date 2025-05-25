@@ -40,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -58,20 +59,18 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import coil.compose.AsyncImage
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.player.MusicPlayerManager
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
 import com.example.pertamaxify.ui.theme.WhiteText
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.Image as ComposeImage
-
+import javax.inject.Inject
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -84,6 +83,7 @@ fun formatDuration(ms: Long): String {
 fun MusicPlayerScreen(
     song: Song,
     onDismiss: () -> Unit,
+    musicPlayerManager: MusicPlayerManager,
     modifier: Modifier = Modifier,
     email: String? = null,
     homeViewModel: HomeViewModel = hiltViewModel(),
@@ -92,28 +92,33 @@ fun MusicPlayerScreen(
 ) {
     val context = LocalContext.current
 
-    var isLiked by remember { mutableStateOf(song.isLiked ?: false) }
-    val player = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(song.url)
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-        }
-    }
-    var isPlaying by remember { mutableStateOf(true) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
-    var duration by remember { mutableLongStateOf(0L) }
+    val isPlaying by musicPlayerManager.isPlaying.collectAsState()
+    val currentPosition by musicPlayerManager.currentPosition.collectAsState()
+    val duration by musicPlayerManager.duration.collectAsState()
+    val isServiceConnected by musicPlayerManager.isServiceConnected.collectAsState()
 
+    var isLiked by remember { mutableStateOf(song.isLiked ?: false) }
     var showQrDialog by remember { mutableStateOf(false) }
     var showDeviceDialog by remember { mutableStateOf(false) }
     var selectedDevice by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(player) {
-        while (true) {
-            currentPosition = player.currentPosition
-            duration = player.duration.takeIf { it > 0 } ?: duration
-            delay(500L)
+    // Initialize playback when component is mounted
+    LaunchedEffect(song) {
+        if (isServiceConnected) {
+            musicPlayerManager.playSong(song, isSongFromServer, serverId ?: -1)
+        }
+    }
+
+    // Update position and duration
+    LaunchedEffect(isServiceConnected) {
+        if (isServiceConnected) {
+            while (true) {
+                musicPlayerManager.getPlayer()?.let { player ->
+                    musicPlayerManager.updatePosition(player.currentPosition)
+                    musicPlayerManager.updateDuration(player.duration.takeIf { it > 0 } ?: 0L)
+                }
+                delay(500L)
+            }
         }
     }
 
@@ -124,7 +129,7 @@ fun MusicPlayerScreen(
                     val temp = selectedDevice
                     selectedDevice = null
                     Toast.makeText(
-                        context, "Output Device $temp disconected", Toast.LENGTH_SHORT
+                        context, "Output Device $temp disconnected", Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -133,7 +138,6 @@ fun MusicPlayerScreen(
         context.registerReceiver(receiver, filter)
 
         onDispose {
-            player.release()
             context.unregisterReceiver(receiver)
         }
     }
@@ -224,7 +228,7 @@ fun MusicPlayerScreen(
 
             // Artwork
             if (song.artwork.isNullOrBlank()) {
-                ComposeImage(
+                Image(
                     painter = painterResource(id = R.drawable.song_image_placeholder),
                     contentDescription = "Album artwork",
                     modifier = Modifier
@@ -263,7 +267,7 @@ fun MusicPlayerScreen(
 
             Slider(
                 value = currentPosition.coerceAtMost(duration).toFloat(),
-                onValueChange = { player.seekTo(it.toLong()) },
+                onValueChange = { musicPlayerManager.seekTo(it.toLong()) },
                 valueRange = 0f..(duration.takeIf { it > 0 }?.toFloat() ?: 1f),
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
@@ -287,7 +291,7 @@ fun MusicPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* Previous */ }) {
+                IconButton(onClick = { musicPlayerManager.previous() }) {
                     Icon(
                         painter = painterResource(R.drawable.skip_prev),
                         contentDescription = "Previous",
@@ -297,10 +301,8 @@ fun MusicPlayerScreen(
                 }
 
                 IconButton(
-                    onClick = {
-                        isPlaying = !isPlaying
-                        if (isPlaying) player.play() else player.pause()
-                    }, modifier = Modifier.size(64.dp)
+                    onClick = { musicPlayerManager.playPause() },
+                    modifier = Modifier.size(64.dp)
                 ) {
                     if (isPlaying) {
                         Icon(
@@ -319,7 +321,7 @@ fun MusicPlayerScreen(
                     }
                 }
 
-                IconButton(onClick = { /* Next */ }) {
+                IconButton(onClick = { musicPlayerManager.next() }) {
                     Icon(
                         painter = painterResource(R.drawable.skip_next),
                         contentDescription = "Next",

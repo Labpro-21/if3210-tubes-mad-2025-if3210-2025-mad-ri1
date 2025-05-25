@@ -22,9 +22,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,15 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.Song
+import com.example.pertamaxify.player.MusicPlayerManager
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
 import com.example.pertamaxify.ui.theme.WhiteText
@@ -48,48 +46,42 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun MiniPlayer(
-    song: Song?,  // Nullable to handle no song case
+    song: Song?,
+    musicPlayerManager: MusicPlayerManager,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
-    // Default to empty state if no song
-    val currentSong = song ?: Song(
+    // Get states from music player manager
+    val isPlaying by musicPlayerManager.isPlaying.collectAsState()
+    val currentPosition by musicPlayerManager.currentPosition.collectAsState()
+    val duration by musicPlayerManager.duration.collectAsState()
+    val currentSong by musicPlayerManager.currentSong.collectAsState()
+
+    // Use the current song from manager if available, otherwise use provided song
+    val displaySong = currentSong ?: song ?: Song(
         id = 0,
         title = "No song selected",
         artist = "",
         artwork = "",
         url = "",
     )
-    val context = LocalContext.current
-    val player = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(currentSong.url)
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
+
+    var progress by remember { mutableFloatStateOf(0f) }
+    var isLiked by remember { mutableStateOf(displaySong.isLiked ?: false) }
+
+    // Update progress
+    LaunchedEffect(currentPosition, duration) {
+        if (duration > 0L) {
+            progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
         }
     }
 
-    var isPlaying by remember { mutableStateOf(false) }
-    var isLiked by remember { mutableStateOf(false) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
-    var duration by remember { mutableLongStateOf(0L) }
-
-    // Update progress when song changes
-    LaunchedEffect(currentSong) {
-        currentPosition = 0L
-        progress = 0f
-        duration = player.duration.takeIf { it > 0 } ?: duration
-        if (duration > 0L) {
-            progress = (currentPosition.toFloat() / duration.toFloat())
-                .coerceIn(0f, 1f)
-        }
-
-        while (true) {
-            currentPosition = player.currentPosition
-            duration = player.duration.takeIf { it > 0 } ?: duration
-            delay(500L)
+    // Initialize song playback if needed
+    LaunchedEffect(song) {
+        song?.let {
+            if (currentSong?.id != it.id) {
+                musicPlayerManager.playSong(it)
+            }
         }
     }
 
@@ -107,11 +99,10 @@ fun MiniPlayer(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = LocalIndication.current
             )
-
     ) {
         Box(modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(6.dp)) {
             Row(Modifier.align(Alignment.CenterStart)) {
-                if (currentSong.artwork.isNullOrBlank()) {
+                if (displaySong.artwork.isNullOrBlank()) {
                     AsyncImage(
                         model = R.drawable.song_image_placeholder,
                         contentDescription = "Album Art",
@@ -120,7 +111,7 @@ fun MiniPlayer(
                     )
                 } else {
                     AsyncImage(
-                        model = currentSong.artwork,
+                        model = displaySong.artwork,
                         contentDescription = "Album Art",
                         modifier = Modifier.size(50.dp).clip(RoundedCornerShape(4.dp)),
                         placeholder = painterResource(id = R.drawable.logo)
@@ -129,7 +120,7 @@ fun MiniPlayer(
 
                 Column(Modifier.padding(horizontal = 4.dp)) {
                     Text(
-                        text = currentSong.title,
+                        text = displaySong.title,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                         ),
@@ -137,7 +128,7 @@ fun MiniPlayer(
                         maxLines = 1,
                     )
                     Text(
-                        text = currentSong.artist,
+                        text = displaySong.artist,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray,
                         maxLines = 1,
@@ -147,10 +138,7 @@ fun MiniPlayer(
 
             Row(Modifier.align(Alignment.CenterEnd)) {
                 IconButton(
-                    onClick = {
-                        isPlaying = !isPlaying
-                        if (isPlaying) player.play() else player.pause()
-                    },
+                    onClick = { musicPlayerManager.playPause() },
                     modifier = Modifier.size(40.dp)
                 ) {
                     if (isPlaying) {
@@ -160,8 +148,7 @@ fun MiniPlayer(
                             tint = WhiteText,
                             modifier = Modifier.size(30.dp)
                         )
-                    }
-                    else {
+                    } else {
                         Icon(
                             Icons.Default.PlayArrow,
                             contentDescription = "Play",
