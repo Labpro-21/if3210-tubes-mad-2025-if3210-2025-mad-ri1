@@ -21,8 +21,14 @@ data class MonthlyStats(
     val timesListened: Int,
     val topSong: String,
     val topArtist: String,
-    val topGenre: String
+    val songImage: String?,
+    val artistImage: String? = null,
+    val streakSong: Song? = null,
+    val streakDay: Int? = null,
+    val streakStartDate: LocalDate? = null,
+    val streakEndDate: LocalDate? = null
 )
+
 
 const val MONTHLY_STATS_LIMIT = 2
 
@@ -32,14 +38,14 @@ class StatisticViewModel @Inject constructor(
     private val songRepository: SongRepository
 ): ViewModel() {
 
-    private val _monthlyStats = MutableStateFlow<List<MonthlyStats>>(emptyList<MonthlyStats>())
+    private val _monthlyStats = MutableStateFlow(emptyList<MonthlyStats>())
     val monthlyStats: StateFlow<List<MonthlyStats>> = _monthlyStats
 
     fun fetchAllStats(email: String) {
        fetchMonthlyStats(email)
     }
 
-    fun fetchMonthlyStats(email: String) {
+    private fun fetchMonthlyStats(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val now = LocalDate.now()
             val stats = mutableListOf<MonthlyStats>()
@@ -47,7 +53,7 @@ class StatisticViewModel @Inject constructor(
                 val target = now.minusMonths(offset.toLong())
                 val year = target.year
                 val month = target.monthValue
-                // all plays in that year/month
+
                 val plays = statisticRepository
                     .getAllStatisticByEmail(email)
                     .filter { stat ->
@@ -63,14 +69,12 @@ class StatisticViewModel @Inject constructor(
                     .associateBy { it.id }
 
                 val totalSeconds = plays.sumOf { stat ->
-                    // Lookup the song once, get its duration (or 0 if missing)
                     userSongsById[stat.songId]?.duration ?: 0
                 }
                 val minutesListened = (totalSeconds / 60.0).roundToInt()
 
                 Log.d("StatisticViewModel", "Minutes listened for $year-${month.toString().padStart(2, '0')}: $minutesListened")
 
-                // top song = most frequent songId in plays
                 val topSongId = plays
                     .groupingBy { it.songId }
                     .eachCount()
@@ -79,22 +83,60 @@ class StatisticViewModel @Inject constructor(
 
                 val topSongName = topSongId?.let { songRepository.getSongById(it).title } ?: "—"
 
-
-                // top artist = artist of that top song
                 val topArtistName = topSongId
                         ?.let { songRepository.getSongById(it).artist }
                         ?: "—"
 
+
+                val songByArtist = songRepository
+                    .getAllSongsByArtist(topArtistName)
+                    .takeIf { it.isNotEmpty() }
+                    ?.random()
+
+                val streaks = plays.groupBy { it.songId }
+                    .mapValues { (_, entries) ->
+                        val dates = entries.map {
+                            Instant.ofEpochMilli(it.playedAt)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        getLongestStreakDays(dates)
+                    }
+
+                val topStreakEntry = streaks.maxByOrNull { it.value }
+                val streakSongId = topStreakEntry?.key
+                val streakDays = topStreakEntry?.value ?: 0
 
                 stats += MonthlyStats(
                     monthYear = "${target.month.name.take(3)} $year",
                     timesListened = minutesListened,
                     topSong = topSongName,
                     topArtist = topArtistName,
-                    topGenre = "" // you can extend if you track genres
+                    songImage = topSongId?.let { songRepository.getSongById(it).artwork },
+                    artistImage = songByArtist?.artwork,
+                    streakSong = streakSongId?.let { songRepository.getSongById(it) },
+                    streakDay = streakDays
                 )
             }
             _monthlyStats.value = stats
         }
     }
+
+    private fun getLongestStreakDays(dates: List<LocalDate>): Int {
+        val uniqueDates = dates.toSet().sorted()
+        var longest = 0
+        var current = 1
+
+        for (i in 1 until uniqueDates.size) {
+            if (uniqueDates[i - 1].plusDays(1) == uniqueDates[i]) {
+                current++
+            } else {
+                longest = maxOf(longest, current)
+                current = 1
+            }
+        }
+
+        return maxOf(longest, current)
+    }
+
 }

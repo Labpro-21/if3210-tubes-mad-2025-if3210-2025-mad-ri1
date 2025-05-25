@@ -61,16 +61,14 @@ fun Capsule(
                 monthYear          = monthStat.monthYear,
                 minutesListened    = monthStat.timesListened,
                 topArtistName      = monthStat.topArtist,
-                topArtistImageUrl  = "",
+                topArtistImageUrl  = monthStat.artistImage ?: "",
                 topSongName        = monthStat.topSong,
-                topSongImageUrl    = "",
-                streakDays         = 0,    // omit streak or compute similarly
+                topSongImageUrl    = monthStat.songImage ?: "",
+                streakDays         = monthStat.streakDay ?: 0,
                 streakSongTitle    = "",
                 streakSongArtist   = "",
                 streakCoverUrl     = "",
-            ) {
-                // onClick: maybe drill in to detail
-            }
+            )
         }
     }
 }
@@ -88,7 +86,8 @@ fun MonthlyStatsScreen(
     streakSongArtist: String,
     streakCoverUrl: String,
     onShareClick: () -> Unit = {},
-    onClick: () -> Unit = {  }
+    onClick: () -> Unit = {},
+    onDownloadClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -187,7 +186,7 @@ fun MonthlyStatsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column {
                 Box  {
@@ -220,7 +219,7 @@ fun MonthlyStatsScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "You played $streakSongTitle by $streakSongArtist day after day. You were on fire.",
+                    text = "You played $streakSongTitle by ${streakSongArtist.trim()} day after day. You were on fire.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
