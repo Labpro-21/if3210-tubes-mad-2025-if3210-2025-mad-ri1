@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.LibraryViewModel
@@ -36,6 +37,7 @@ import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.theme.PertamaxifyTheme
 import com.example.pertamaxify.utils.JwtUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -168,6 +170,18 @@ fun MainScreen(
                 2 -> ProfileScreen(
                     statisticViewModel = statisticViewModel
                 )
+
+                3 -> QRScannerScreen { serverId ->
+                    playlistViewModel.viewModelScope.launch {
+                        val songResp = playlistViewModel.getSongByServerId(serverId)
+                        songResp?.let {
+                            isPlayingOnlineSong = true
+                            currentOnlineSong = it
+                            isPlayerVisible = true
+                            selectedTab = 0
+                        }
+                    }
+                }
             }
 
             // Show player for local songs

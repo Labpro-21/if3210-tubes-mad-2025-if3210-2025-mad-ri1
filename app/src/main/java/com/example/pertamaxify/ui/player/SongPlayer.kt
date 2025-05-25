@@ -8,6 +8,7 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,10 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
@@ -62,8 +67,11 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.theme.RedBackground
 import com.example.pertamaxify.ui.theme.WhiteHint
 import com.example.pertamaxify.ui.theme.WhiteText
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.Image as ComposeImage
+
 
 fun formatDuration(ms: Long): String {
     val totalSeconds = ms / 1000
@@ -97,6 +105,7 @@ fun MusicPlayerScreen(
     var currentPosition by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
 
+    var showQrDialog by remember { mutableStateOf(false) }
     var showDeviceDialog by remember { mutableStateOf(false) }
     var selectedDevice by remember { mutableStateOf<String?>(null) }
 
@@ -115,9 +124,7 @@ fun MusicPlayerScreen(
                     val temp = selectedDevice
                     selectedDevice = null
                     Toast.makeText(
-                        context,
-                        "Output Device $temp disconected",
-                        Toast.LENGTH_SHORT
+                        context, "Output Device $temp disconected", Toast.LENGTH_SHORT
                     ).show()
                 }
             }
@@ -160,6 +167,19 @@ fun MusicPlayerScreen(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = "Share",
+                                tint = WhiteText,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    if (isSongFromServer) {
+                        IconButton(onClick = {
+                            showQrDialog = true
+                        }) {
+                            Icon(
+                                painter = painterResource(R.drawable.qr),
+                                contentDescription = "Show QR",
                                 tint = WhiteText,
                                 modifier = Modifier.size(28.dp)
                             )
@@ -316,6 +336,13 @@ fun MusicPlayerScreen(
                 showDeviceDialog = false
             })
         }
+
+        if (showQrDialog && isSongFromServer) {
+            QrCodeDialog(
+                link = "purrytify://song/${serverId}",
+                onDismiss = { showQrDialog = false }
+            )
+        }
     }
 }
 
@@ -417,4 +444,50 @@ fun DeviceSelectionDialog(
                 }
             }
         })
+}
+
+fun generateQrCode(content: String, size: Int = 512): ImageBitmap? {
+    return try {
+        val bits = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+        val bmp = createBitmap(size, size)
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bmp[x, y] =
+                    if (bits[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+            }
+        }
+        bmp.asImageBitmap()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+@Composable
+fun QrCodeDialog(
+    link: String, onDismiss: () -> Unit
+) {
+    val qrBitmap = generateQrCode(link)
+
+    AlertDialog(onDismissRequest = onDismiss, confirmButton = {
+        TextButton(onClick = onDismiss) {
+            Text("Close", color = WhiteText)
+        }
+    }, title = {
+        Text("Share via QR Code", color = WhiteText)
+    }, containerColor = RedBackground, textContentColor = WhiteText, text = {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (qrBitmap != null) {
+                Image(
+                    bitmap = qrBitmap,
+                    contentDescription = "QR Code",
+                    modifier = Modifier.size(256.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(link, color = WhiteHint, style = MaterialTheme.typography.labelSmall)
+            } else {
+                Text("Failed to generate QR code", color = Color.Red)
+            }
+        }
+    })
 }
