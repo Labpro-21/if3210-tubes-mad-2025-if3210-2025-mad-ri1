@@ -32,6 +32,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -44,9 +45,12 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.coil)
 
     implementation(libs.androidx.room.runtime)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.tasks)
 
     // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
     // See Add the KSP plugin to your project
@@ -84,6 +88,11 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.media3.ui.v131)
+    implementation(libs.androidx.media3.session)
+
+
 
     // optional - Paging 3 Integration
     implementation(libs.androidx.room.paging)
@@ -117,6 +126,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
+    // Location
+    implementation(libs.play.services.location) {
+        exclude(group = "com.google.android.gms", module = "play-services-tasks")
+        exclude(group = "com.google.android.gms", module = "play-services-basement")
+    }
+    implementation(libs.play.services.tasks)
+    implementation(libs.play.services.basement)
 
     // Android fragment
     implementation(libs.androidx.fragment.ktx)

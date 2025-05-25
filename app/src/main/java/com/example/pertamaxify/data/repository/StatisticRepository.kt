@@ -104,6 +104,4 @@ class StatisticRepository @Inject constructor(
         return songsOnStreak
     }
 
-
-
 }

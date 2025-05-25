@@ -26,6 +26,7 @@ import com.example.pertamaxify.data.model.MainViewModel
 import com.example.pertamaxify.data.model.PlaylistViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.SongResponse
+import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.data.repository.SongRepository
 import com.example.pertamaxify.ui.player.MiniPlayer
 import com.example.pertamaxify.ui.player.MusicPlayerScreen
@@ -49,12 +50,14 @@ class HomeActivity : ComponentActivity() {
                 val homeViewModel: HomeViewModel = hiltViewModel()
                 val playlistViewModel: PlaylistViewModel = hiltViewModel()
                 val libraryViewModel: LibraryViewModel = hiltViewModel()
+                val statisticViewModel: StatisticViewModel = hiltViewModel()
 
                 MainScreen(
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
-                    libraryViewModel = libraryViewModel
+                    libraryViewModel = libraryViewModel,
+                    statisticViewModel = statisticViewModel
                 )
             }
         }
@@ -66,7 +69,8 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    statisticViewModel: StatisticViewModel
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -148,7 +152,9 @@ fun MainScreen(
                     mainViewModel = mainViewModel
                 )
 
-                2 -> ProfileScreen()
+                2 -> ProfileScreen(
+                    statisticViewModel = statisticViewModel
+                )
             }
 
             // Show player for local songs
