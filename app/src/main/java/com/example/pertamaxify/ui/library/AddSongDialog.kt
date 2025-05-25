@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddSongDialog(
     onDismiss: () -> Unit,
-    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
+    onSave: (String, String, String?, String, String?) -> Unit,
     email: String?
 ) {
     val context = LocalContext.current
@@ -53,25 +53,20 @@ fun AddSongDialog(
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var audioUri by remember { mutableStateOf<Uri?>(null) }
 
-    // State to track if metadata extraction is in progress
     var isExtracting by remember { mutableStateOf(false) }
 
-    // Coroutine scope for metadata extraction
     val coroutineScope = rememberCoroutineScope()
 
-    // Use OpenDocument for getting persistable permissions
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
             try {
-                // Take persistable URI permission for the image
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                 imageUri = uri
             } catch (e: Exception) {
                 Log.e("AddSongDialog", "Error taking persistable permission for image URI: $uri", e)
-                // Store the URI anyway, we'll handle access differently
                 imageUri = uri
             }
         }
@@ -82,31 +77,25 @@ fun AddSongDialog(
     ) { uri: Uri? ->
         uri?.let {
             try {
-                // Take persistable URI permission for the audio
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                 audioUri = uri
 
-                // Extract metadata when audio is selected
                 isExtracting = true
                 coroutineScope.launch {
                     val metadata = AudioMetadataExtractor.extractMetadata(context, uri)
 
                     Log.d("AddSongDialog", "Extracted metadata: $metadata")
 
-                    // Auto-fill fields with extracted metadata if available
                     metadata?.let { meta ->
-                        // Only set title if it's not empty and the user hasn't entered anything yet
                         if (!meta.title.isNullOrBlank() && title.isBlank()) {
                             title = meta.title
                         }
 
-                        // Only set artist if it's not empty and the user hasn't entered anything yet
                         if (!meta.artist.isNullOrBlank() && artist.isBlank()) {
                             artist = meta.artist
                         }
 
-                        // Set album art if available and no image is selected yet
                         if (meta.albumArt != null && imageUri == null) {
                             imageUri = meta.albumArt
                         }
@@ -116,7 +105,6 @@ fun AddSongDialog(
                 }
             } catch (e: Exception) {
                 Log.e("AddSongDialog", "Error taking persistable permission for audio URI: $uri", e)
-                // Store the URI anyway, we'll handle access differently
                 audioUri = uri
                 isExtracting = false
             }
@@ -125,8 +113,7 @@ fun AddSongDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFF1C1C1E)
+            shape = RoundedCornerShape(16.dp), color = Color(0xFF1C1C1E)
         ) {
             Column(
                 modifier = Modifier
@@ -149,18 +136,15 @@ fun AddSongDialog(
                         },
                         imageUri = imageUri
                     )
-                    UploadBox(
-                        label = audioUri?.let { "Audio Selected" } ?: "Upload File",
+                    UploadBox(label = audioUri?.let { "Audio Selected" } ?: "Upload File",
                         icon = R.drawable.placeholder,
                         onClick = {
                             audioPickerLauncher.launch(arrayOf("audio/*"))
-                        }
-                    )
+                        })
                 }
 
                 Spacer(Modifier.height(24.dp))
 
-                // Show loading indicator while extracting metadata
                 if (isExtracting) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -211,10 +195,8 @@ fun AddSongDialog(
 
                     Button(
                         onClick = {
-                            if (title.isNotBlank() && artist.isNotBlank() &&
-                                audioUri != null) {
+                            if (title.isNotBlank() && artist.isNotBlank() && audioUri != null) {
 
-                                // Store URIs directly as strings
                                 val imageUriString = imageUri.toString()
                                 val audioUriString = audioUri.toString()
 
@@ -224,8 +206,7 @@ fun AddSongDialog(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
                         modifier = Modifier.weight(1f),
-                        enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() &&
-                                audioUri != null
+                        enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() && audioUri != null
                     ) {
                         Text("Save", color = Color.White)
                     }
