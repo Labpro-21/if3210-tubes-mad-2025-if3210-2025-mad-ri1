@@ -1,10 +1,9 @@
 package com.example.pertamaxify
 
 import android.app.Application
-import android.os.Build
-import dagger.hilt.android.HiltAndroidApp
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import dagger.hilt.android.HiltAndroidApp
 
 const val CHANNEL_ID = "pertamaxify_channel"
 const val CHANNEL_NAME = "Pertamaxify Channel"

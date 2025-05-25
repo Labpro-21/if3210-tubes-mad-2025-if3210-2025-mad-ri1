@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import androidx.core.content.edit
 
 object SecurePrefs {
     private const val PREFS_NAME = "secure_prefs"
@@ -44,7 +45,7 @@ object SecurePrefs {
 
     // Clear Tokens
     fun clearTokens(context: Context) {
-        getSharedPreferences(context).edit().clear().apply()
+        getSharedPreferences(context).edit { clear() }
         Log.d("SecurePrefs", "Tokens cleared!")
     }
 }

@@ -52,18 +52,13 @@ interface StatisticDao {
 
     suspend fun getMostPlayedSong(email: String): Statistic? {
         val statistics = getAllStatisticByEmail(email)
-        return statistics.groupBy { it.songId }
-            .maxByOrNull { it.value.size }
-            ?.value
-            ?.firstOrNull()
+        return statistics.groupBy { it.songId }.maxByOrNull { it.value.size }?.value?.firstOrNull()
     }
 
     suspend fun getListOfMostPlayedSong(email: String, limit: Int): List<Statistic> {
         val statistics = getAllStatisticByEmail(email)
-        return statistics.groupBy { it.songId }
-            .map { it.value.first() }
-            .sortedByDescending { it.playedAt }
-            .take(limit)
+        return statistics.groupBy { it.songId }.map { it.value.first() }
+            .sortedByDescending { it.playedAt }.take(limit)
     }
 
     suspend fun getTotalListeningTime(email: String): Long {

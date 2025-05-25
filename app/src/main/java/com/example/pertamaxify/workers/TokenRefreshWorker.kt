@@ -19,7 +19,6 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
     override fun doWork(): Result {
         Log.d("TokenRefreshWorker", "Worker started. Checking token validity...")
 
-//        val currentToken = SecurePrefs.getAccessToken(applicationContext)
         val refreshToken = SecurePrefs.getRefreshToken(applicationContext)
 
         if (refreshToken.isNullOrEmpty()) {
@@ -41,8 +40,7 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
                     Result.success()
                 } else {
                     Log.e(
-                        "TokenRefreshWorker",
-                        "Token refresh failed! Response: ${response.code()}"
+                        "TokenRefreshWorker", "Token refresh failed! Response: ${response.code()}"
                     )
                     Result.failure()
                 }
@@ -60,9 +58,9 @@ class TokenRefreshWorker(context: Context, workerParams: WorkerParameters) :
     private fun scheduleNextRun(context: Context) {
         Log.d("TokenRefreshWorker", "Scheduling next token refresh in 5 minutes...")
 
-        val workRequest = OneTimeWorkRequestBuilder<TokenRefreshWorker>()
-            .setInitialDelay(5, TimeUnit.MINUTES)
-            .build()
+        val workRequest =
+            OneTimeWorkRequestBuilder<TokenRefreshWorker>().setInitialDelay(5, TimeUnit.MINUTES)
+                .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)
     }

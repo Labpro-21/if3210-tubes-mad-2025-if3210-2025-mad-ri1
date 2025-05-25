@@ -2,11 +2,10 @@ package com.example.pertamaxify.db
 
 import android.content.Context
 import android.util.Log
-import com.example.pertamaxify.data.model.Song
+import androidx.core.content.edit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import androidx.core.content.edit
 import kotlinx.coroutines.withContext
 
 object DatabaseSeeder {
@@ -33,7 +32,7 @@ object DatabaseSeeder {
 //                    "Starboy",
 //                    "The Weeknd, Daft Punk",
 //                    "content://media/external/file/1000000033",
-//                    "content://media/external/file/1000000035"
+//                    "content:l//media/external/file/1000000035"
 //                ),
 //                Song(
 //                    "Here Comes The Sun",

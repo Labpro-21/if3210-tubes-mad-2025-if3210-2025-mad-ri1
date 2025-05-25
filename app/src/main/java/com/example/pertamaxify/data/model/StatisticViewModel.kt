@@ -34,24 +34,21 @@ data class MonthlyStats(
 
 
 data class StreakInfo(
-    val days: Int,
-    val startDate: LocalDate?,
-    val endDate: LocalDate?
+    val days: Int, val startDate: LocalDate?, val endDate: LocalDate?
 )
 
 const val MONTHLY_STATS_LIMIT = 2
 
 @HiltViewModel
 class StatisticViewModel @Inject constructor(
-    private val statisticRepository: StatisticRepository,
-    private val songRepository: SongRepository
-): ViewModel() {
+    private val statisticRepository: StatisticRepository, private val songRepository: SongRepository
+) : ViewModel() {
 
     private val _monthlyStats = MutableStateFlow(emptyList<MonthlyStats>())
     val monthlyStats: StateFlow<List<MonthlyStats>> = _monthlyStats
 
     fun fetchAllStats(email: String) {
-       fetchMonthlyStats(email)
+        fetchMonthlyStats(email)
     }
 
     private fun fetchMonthlyStats(email: String) {
@@ -63,74 +60,66 @@ class StatisticViewModel @Inject constructor(
                 val year = target.year
                 val month = target.monthValue
 
-                val plays = statisticRepository
-                    .getAllStatisticByEmail(email)
-                    .filter { stat ->
-                        Instant.ofEpochMilli(stat.playedAt)
-                            .atZone(ZoneId.systemDefault())
+                val plays = statisticRepository.getAllStatisticByEmail(email).filter { stat ->
+                        Instant.ofEpochMilli(stat.playedAt).atZone(ZoneId.systemDefault())
                             .let { it.year == year && it.monthValue == month }
                     }
 
-                Log.d("StatisticViewModel", "Plays for $year-${month.toString().padStart(2, '0')}: ${plays.size}")
+                Log.d(
+                    "StatisticViewModel",
+                    "Plays for $year-${month.toString().padStart(2, '0')}: ${plays.size}"
+                )
 
-                val userSongsById: Map<Int, Song> = songRepository
-                    .getAllSongsByEmail(email)
-                    .associateBy { it.id }
+                val userSongsById: Map<Int, Song> =
+                    songRepository.getAllSongsByEmail(email).associateBy { it.id }
 
                 val totalSeconds = plays.sumOf { stat ->
                     userSongsById[stat.songId]?.duration ?: 0
                 }
                 val minutesListened = (totalSeconds / 60.0).roundToInt()
 
-                Log.d("StatisticViewModel", "Minutes listened for $year-${month.toString().padStart(2, '0')}: $minutesListened")
+                Log.d(
+                    "StatisticViewModel", "Minutes listened for $year-${
+                        month.toString().padStart(2, '0')
+                    }: $minutesListened"
+                )
 
-                val topSongId = plays
-                    .groupingBy { it.songId }
-                    .eachCount()
-                    .maxByOrNull { it.value }
-                    ?.key
+                val topSongId =
+                    plays.groupingBy { it.songId }.eachCount().maxByOrNull { it.value }?.key
 
                 val songPlayCounts = plays.groupingBy { it.songId }.eachCount()
-                val top5Songs = songPlayCounts.entries
-                    .sortedByDescending { it.value }
-                    .take(5)
+                val top5Songs = songPlayCounts.entries.sortedByDescending { it.value }.take(5)
                     .mapNotNull { entry -> userSongsById[entry.key]?.let { it to entry.value } }
 
-                val artistPlayCounts = plays.mapNotNull { userSongsById[it.songId]?.artist }
-                    .groupingBy { it }
-                    .eachCount()
-                val top5Artists = artistPlayCounts.entries
-                    .sortedByDescending { it.value }
-                    .take(5)
+                val artistPlayCounts =
+                    plays.mapNotNull { userSongsById[it.songId]?.artist }.groupingBy { it }
+                        .eachCount()
+                val top5Artists = artistPlayCounts.entries.sortedByDescending { it.value }.take(5)
                     .map { it.toPair() }
 
                 val topSongName = top5Songs.firstOrNull()?.first?.title ?: "—"
                 val topArtistName = top5Artists.firstOrNull()?.first ?: "—"
 
 
-                val songByArtist = songRepository
-                    .getAllSongsByArtist(topArtistName)
-                    .takeIf { it.isNotEmpty() }
-                    ?.random()
+                val songByArtist =
+                    songRepository.getAllSongsByArtist(topArtistName).takeIf { it.isNotEmpty() }
+                        ?.random()
 
                 val top5ArtistsImage = top5Artists.map { (artist, _) ->
                     val artistSongs = songRepository.getAllSongsByArtist(artist)
-                    val randomArtwork = artistSongs
-                        .mapNotNull { it.artwork }
-                        .filter { it.isNotBlank() }
-                        .randomOrNull()
-                    artist to randomArtwork // This will be null if no valid image, handled by UI
+                    val randomArtwork =
+                        artistSongs.mapNotNull { it.artwork }.filter { it.isNotBlank() }
+                            .randomOrNull()
+                    artist to randomArtwork
                 }
 
 
-                val streaks = plays.groupBy { it.songId }
-                    .mapValues { (_, entries) ->
+                val streaks = plays.groupBy { it.songId }.mapValues { (_, entries) ->
                         val dates = entries.map {
-                            Instant.ofEpochMilli(it.playedAt)
-                                .atZone(ZoneId.systemDefault())
+                            Instant.ofEpochMilli(it.playedAt).atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                        }.distinct().sorted() // Use distinct, sorted dates
-                        findLongestStreakInfo(dates) // Use the new function
+                        }.distinct().sorted()
+                        findLongestStreakInfo(dates)
                     }
 
                 val topStreakEntry = streaks.maxByOrNull { it.value.days }
@@ -138,17 +127,21 @@ class StatisticViewModel @Inject constructor(
                 val streakSongId = topStreakEntry?.key
                 val streakInfo = topStreakEntry?.value
 
-                Log.d("StatisticViewModel", "Streak for $year-${month.toString().padStart(2, '0')}: " +
-                        "${streakInfo?.days ?: 0} days from ${streakInfo?.startDate} to ${streakInfo?.endDate}")
+                Log.d(
+                    "StatisticViewModel",
+                    "Streak for $year-${
+                        month.toString().padStart(2, '0')
+                    }: " + "${streakInfo?.days ?: 0} days from ${streakInfo?.startDate} to ${streakInfo?.endDate}"
+                )
 
                 stats += MonthlyStats(
                     monthYear = "${target.month.name.take(3)} $year",
                     timesListened = minutesListened,
                     topSong = topSongName,
                     topArtist = topArtistName,
-                    songImage = topSongId?.let { userSongsById[it]?.artwork }, // Optimized
+                    songImage = topSongId?.let { userSongsById[it]?.artwork },
                     artistImage = songByArtist?.artwork,
-                    streakSong = streakSongId?.let { userSongsById[it] }, // Optimized
+                    streakSong = streakSongId?.let { userSongsById[it] },
                     streakDay = streakInfo?.days,
                     streakStartDate = streakInfo?.startDate,
                     streakEndDate = streakInfo?.endDate,
@@ -172,12 +165,12 @@ class StatisticViewModel @Inject constructor(
         var currentStreak = 1
 
         for (i in 1 until dates.size) {
-            if (dates[i-1].plusDays(1) == dates[i]) {
+            if (dates[i - 1].plusDays(1) == dates[i]) {
                 currentStreak++
             } else {
                 if (currentStreak > longestStreak) {
                     longestStreak = currentStreak
-                    longestStreakEndDate = dates[i-1]
+                    longestStreakEndDate = dates[i - 1]
                 }
                 // Reset
                 currentStreak = 1
@@ -192,8 +185,9 @@ class StatisticViewModel @Inject constructor(
         return if (longestStreak > 0 && longestStreakEndDate != null) {
             val startDate = longestStreakEndDate.minusDays(longestStreak.toLong() - 1)
             StreakInfo(longestStreak, startDate, longestStreakEndDate)
+
         } else {
-            StreakInfo(if(dates.isNotEmpty()) 1 else 0, null, null)
+            StreakInfo( 0, null, null)
         }
     }
 

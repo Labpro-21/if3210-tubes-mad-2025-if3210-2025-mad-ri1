@@ -17,14 +17,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    // Provide the Room Database
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "pertamaxify_database"
+            context, AppDatabase::class.java, "pertamaxify_database"
         ).build()
     }
 
