@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Deep link intent
         intent?.data?.let { uri ->
             if (uri.scheme == "purrytify" && uri.host == "song") {
                 val serverId = uri.lastPathSegment?.toIntOrNull()

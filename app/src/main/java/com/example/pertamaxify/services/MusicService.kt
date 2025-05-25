@@ -28,8 +28,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -55,7 +53,6 @@ class MusicService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize media session
         mediaSession = MediaSessionCompat(this, "MusicService").apply {
             setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
@@ -65,7 +62,6 @@ class MusicService : Service() {
             isActive = true
         }
 
-        // Initialize notification
         val intent = Intent(this, HomeActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -85,7 +81,6 @@ class MusicService : Service() {
                     .setShowActionsInCompactView(0, 1, 2)
             )
 
-        // Setup ExoPlayer listener
         exoPlayer.addListener(playerListener)
     }
 
@@ -122,7 +117,6 @@ class MusicService : Service() {
         updateNotification()
         updateMediaSession()
 
-        // Start foreground service
         startForeground(NOTIFICATION_ID, buildNotification())
     }
 
@@ -135,11 +129,9 @@ class MusicService : Service() {
     }
 
     fun next() {
-        // Implement next logic based on your playlist
     }
 
     fun previous() {
-        // Implement previous logic based on your playlist
     }
 
     fun seekTo(position: Long) {
@@ -158,24 +150,20 @@ class MusicService : Service() {
     private fun buildNotification(): Notification {
         val song = currentSong ?: return notificationBuilder.build()
 
-        // Load album art
         loadAlbumArt(song.artwork)
 
-        // Play/Pause action
         val playPauseAction = NotificationCompat.Action(
             if (exoPlayer.isPlaying) R.drawable.pause else R.drawable.ic_play,
             if (exoPlayer.isPlaying) "Pause" else "Play",
             createPendingIntent(ACTION_PLAY_PAUSE)
         )
 
-        // Previous action
         val previousAction = NotificationCompat.Action(
             R.drawable.skip_prev,
             "Previous",
             createPendingIntent(ACTION_PREVIOUS)
         )
 
-        // Next action
         val nextAction = NotificationCompat.Action(
             R.drawable.skip_next,
             "Next",

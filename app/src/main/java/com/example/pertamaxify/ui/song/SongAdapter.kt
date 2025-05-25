@@ -22,7 +22,7 @@ class SongAdapter : RecyclerView.Adapter<SongViewHolder>() {
         holder.bind(
             song = song,
             onSongClick = { onSongClickListener?.invoke(it) },
-            onLongClick = { onSongLongClickListener?.invoke(it) } // Just invoke callback
+            onLongClick = { onSongLongClickListener?.invoke(it) }
         )
     }
 

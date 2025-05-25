@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -108,7 +109,7 @@ fun MainScreen(
         userEmail = ""
     }
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     var selectedSong by mainViewModel.selectedSong
     var isPlayerVisible by mainViewModel.isPlayerVisible
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
@@ -117,7 +118,6 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
         mainViewModel.dismissPlayer()
     }
@@ -139,7 +139,6 @@ fun MainScreen(
         }
     }
 
-    // When tab selection changes, refresh data
     LaunchedEffect(selectedTab) {
         when (selectedTab) {
             0 -> {
@@ -173,7 +172,6 @@ fun MainScreen(
                     playlistViewModel = playlistViewModel,
                     selectedSong = selectedSong,
                     onSongSelected = { newSong ->
-                        // Playing a local song
                         isPlayingOnlineSong = false
                         currentOnlineSong = null
 
@@ -181,11 +179,9 @@ fun MainScreen(
                         musicPlayerManager.playSong(newSong, false, -1)
                     },
                     onOnlineSongSelected = { onlineSong ->
-                        // Playing an online song
                         isPlayingOnlineSong = true
                         currentOnlineSong = onlineSong
 
-                        // Create a temporary Song object from the online song
                         val tempSong = Song(
                             id = 0,
                             title = onlineSong.title,
@@ -221,7 +217,6 @@ fun MainScreen(
                             isPlayingOnlineSong = true
                             currentOnlineSong = it
 
-                            // Create a temporary Song object from the online song
                             val tempSong = Song(
                                 id = 0,
                                 title = it.title,
@@ -241,10 +236,8 @@ fun MainScreen(
                 }
             }
 
-            // Show player for local songs
             if (!isPlayingOnlineSong && selectedSong != null) {
                 if (isPlayerVisible) {
-                    // Show full Music Player
                     MusicPlayerScreen(
                         song = selectedSong!!,
                         onDismiss = { mainViewModel.dismissPlayer() },
@@ -256,7 +249,6 @@ fun MainScreen(
                         serverId = -1
                     )
                 } else {
-                    // Show Mini Player
                     MiniPlayer(
                         song = selectedSong!!,
                         musicPlayerManager = musicPlayerManager,
@@ -266,9 +258,7 @@ fun MainScreen(
                 }
             }
 
-            // Show player for online songs
             if (isPlayingOnlineSong && currentOnlineSong != null) {
-                // Create a temporary Song object from the online song
                 val tempSong = Song(
                     id = 0,
                     title = currentOnlineSong!!.title,
@@ -281,7 +271,6 @@ fun MainScreen(
                 )
 
                 if (isPlayerVisible) {
-                    // Show full Music Player for online song
                     MusicPlayerScreen(
                         song = tempSong,
                         onDismiss = {
@@ -293,7 +282,6 @@ fun MainScreen(
                         serverId = currentOnlineSong!!.id
                     )
                 } else {
-                    // Show Mini Player for online song
                     MiniPlayer(
                         song = tempSong,
                         musicPlayerManager = musicPlayerManager,
@@ -306,7 +294,6 @@ fun MainScreen(
     }
 }
 
-// Extension function to convert duration string (mm:ss) to seconds
 private fun SongResponse.convertDurationToSeconds(duration: String): Int {
     try {
         val parts = duration.split(":")

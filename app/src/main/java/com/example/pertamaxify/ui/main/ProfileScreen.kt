@@ -4,7 +4,6 @@ import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,16 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,22 +34,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.data.model.ProfileViewModel
 import com.example.pertamaxify.data.model.StatisticViewModel
-import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.ui.auth.LoginActivity
-import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.network.NoConnectionScreen
 import com.example.pertamaxify.ui.profile.LocationPickerScreen
 import com.example.pertamaxify.ui.statistic.Capsule
 import com.example.pertamaxify.ui.profile.ProfileUpdateDialog
-import com.example.pertamaxify.ui.profile.LocationPickerScreen
 import com.example.pertamaxify.utils.getCountryNameFromCode
 
 @Composable
@@ -73,6 +62,9 @@ fun ProfileScreen(
     var newLocationCode by remember { mutableStateOf<String?>(null) }
     val isConnected by NetworkUtils.isConnected.collectAsState()
     val client = remember { ApiClient.instance }
+    var email = ""
+
+    val profileData by profileViewModel.profileData.collectAsState()
 
     LaunchedEffect(Unit) {
         NetworkUtils.registerNetworkCallback(context)
@@ -97,12 +89,15 @@ fun ProfileScreen(
             return@LaunchedEffect
         }
 
+
         if (profile == null && isConnected) {
             try {
                 val res = client.getProfile("Bearer $token")
                 if (res.isSuccessful) {
                     profile = res.body()
                     showNoConnection = false
+
+                    email = "${profile?.username}@std.stei.itb.ac.id"
                 } else {
                     Log.e("ProfileScreen", "API Error: ${res.code()}")
                 }
@@ -113,6 +108,7 @@ fun ProfileScreen(
             showNoConnection = true
         }
 
+        profileViewModel.refreshData(email)
     }
 
     if (showNoConnection) {
@@ -207,11 +203,11 @@ fun ProfileScreen(
         if (showMapPicker) {
             LocationPickerScreen(
                 onLocationPicked = { _, _, countryCode ->
-                    newLocationCode = countryCode;
-                    showMapPicker = false;
+                    newLocationCode = countryCode
+                    showMapPicker = false
                 },
                 onDismiss = {
-                    showMapPicker = false;
+                    showMapPicker = false
                     showDialog = true
                 },
             )
