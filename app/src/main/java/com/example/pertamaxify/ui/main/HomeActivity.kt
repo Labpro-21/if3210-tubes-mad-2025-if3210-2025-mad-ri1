@@ -27,6 +27,7 @@ import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.LibraryViewModel
 import com.example.pertamaxify.data.model.MainViewModel
+import com.example.pertamaxify.data.model.ProfileViewModel
 import com.example.pertamaxify.data.model.PlaylistViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.SongResponse
@@ -67,6 +68,7 @@ class HomeActivity : ComponentActivity() {
                 val playlistViewModel: PlaylistViewModel = hiltViewModel()
                 val libraryViewModel: LibraryViewModel = hiltViewModel()
                 val statisticViewModel: StatisticViewModel = hiltViewModel()
+                val profileViewModel: ProfileViewModel = hiltViewModel()
 
                 MainScreen(
                     mainViewModel = mainViewModel,
@@ -74,6 +76,7 @@ class HomeActivity : ComponentActivity() {
                     playlistViewModel = playlistViewModel,
                     libraryViewModel = libraryViewModel,
                     statisticViewModel = statisticViewModel,
+                    profileViewModel = profileViewModel,
                     musicPlayerManager = musicPlayerManager,
                     deepLinkServerId = if (deepLinkId != -1) deepLinkId else null
                 )
@@ -90,6 +93,7 @@ fun MainScreen(
     libraryViewModel: LibraryViewModel,
     statisticViewModel: StatisticViewModel,
     musicPlayerManager: MusicPlayerManager,
+    profileViewModel: ProfileViewModel,
     deepLinkServerId: Int? = null
 ) {
     val context = LocalContext.current
@@ -206,7 +210,8 @@ fun MainScreen(
                 )
 
                 2 -> ProfileScreen(
-                    statisticViewModel = statisticViewModel
+                    statisticViewModel = statisticViewModel,
+                    profileViewModel = profileViewModel
                 )
 
                 3 -> QRScannerScreen { serverId ->

@@ -22,6 +22,10 @@ object ApiClient {
         createService(SongService::class.java)
     }
 
+    val profileService: ProfileService by lazy {
+        createService(ProfileService::class.java)
+    }
+
     private fun <T> createService(serviceClass: Class<T>): T {
         return Retrofit.Builder().baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create()).client(client).build()
