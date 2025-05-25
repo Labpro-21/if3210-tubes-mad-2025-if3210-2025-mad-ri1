@@ -2,6 +2,8 @@ package com.example.pertamaxify.ui.profile
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.net.Uri
@@ -60,6 +62,8 @@ import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
 import android.location.Location
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -68,23 +72,21 @@ import org.json.JSONObject
 import java.util.Locale
 import kotlinx.coroutines.launch
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileUpdateDialog(
     onDismiss: () -> Unit,
 //    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
     profile: ProfileResponse?,
+    mapLocationCode: String?,
+    onShowMapClicked: () -> Unit
 //    onCountryDetected: (String) -> Unit
 ) {
 
     // Main Variables
     val context = LocalContext.current
     var newProfileURI by remember { mutableStateOf<Uri?>(null) }
-    var newLocation by remember { mutableStateOf<String?>(null) }
+    var oldLocationCode by remember { mutableStateOf<String?>(null) }
     var showImageSourceDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var tempFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -93,6 +95,8 @@ fun ProfileUpdateDialog(
     var locationError by remember { mutableStateOf<String?>(null) }
     var showPermissionRationale by remember { mutableStateOf<Boolean>(false) }
     val detectCountry = remember { mutableStateOf<() -> Unit>({}) }
+    var newLocationCode by remember { mutableStateOf<String?>(null) }
+//    var selectedLocation by remember { mutableStateOf(profile?.location ?: "") }
 
 //    // State to track if metadata extraction is in progress
 //    var isExtracting by remember { mutableStateOf(false) }
@@ -279,6 +283,14 @@ fun ProfileUpdateDialog(
         }
     }
 
+    fun getCountryNameFromCode(countryCode: String): String {
+        return try {
+            Locale("", countryCode).displayCountry
+        } catch (e: Exception) {
+            "Unknown"
+        }
+    }
+
     // Fetch country code from coordinates
     fun fetchCountryCode(latitude: Double, longitude: Double, onResult: (String) -> Unit) {
         try {
@@ -316,6 +328,9 @@ fun ProfileUpdateDialog(
                         fetchCountryCode(location.latitude, location.longitude) { countryCode ->
                             val countryName = Locale("", countryCode).displayCountry
                             detectedCountry = countryName
+                            oldLocationCode = profile?.location ?: ""
+                            newLocationCode = countryCode
+                            // TODO: STORE ISO CODE USING countryCode
                         }
                     } else {
                         locationError = "Location not available"
@@ -368,6 +383,56 @@ fun ProfileUpdateDialog(
         )
     }
 
+//    // Location picker launcher
+//    val locationPickerLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartActivityForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            val data: Intent? = result.data
+//            data?.let {
+//                val lat = it.getDoubleExtra("latitude", 0.0)
+//                val lng = it.getDoubleExtra("longitude", 0.0)
+//                val address = it.getStringExtra("address") ?: "Unknown location"
+//
+//                selectedLocation = address
+//            }
+//        }
+//    }
+//
+//    // Open Google Maps
+//    fun openLocationPicker() {
+//        try {
+//            // Create explicit intent for Google Maps
+//            val intent = Intent(Intent.ACTION_VIEW).apply {
+//                data = Uri.parse("geo:0,0?q=")
+//                setPackage("com.google.android.apps.maps")
+//                putExtra("EXTRA_EDIT_MODE", true) // Enable selection mode
+//            }
+//
+//            locationPickerLauncher.launch(intent)
+//        } catch (e: ActivityNotFoundException) {
+//            // Fallback if Google Maps not installed
+//            Toast.makeText(context, "Google Maps not installed", Toast.LENGTH_SHORT).show()
+//
+//            // Alternative: Open general map picker
+//            val intent = Intent(Intent.ACTION_VIEW).apply {
+//                data = Uri.parse("geo:0,0?q=")
+//            }
+//            locationPickerLauncher.launch(intent)
+//        }
+//    }
+
+//    if (showMapPicker) {
+//        LocationPickerScreen(
+//            onLocationPicked = { _, _, countryCode ->
+//                newLocationCode = countryCode
+//            },
+//            onDismiss = {
+//                showMapPicker = false
+//
+//            }
+//        )
+//    }
 
     // Main Profile Edit Dialogue
     Dialog(onDismissRequest = onDismiss) {
@@ -416,7 +481,7 @@ fun ProfileUpdateDialog(
                 Spacer(Modifier.height(24.dp))
 
                 Button(
-                    onClick = {},
+                    onClick = onShowMapClicked,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                 ) {
                     Text("Select Location", color = Color.White)
@@ -425,6 +490,15 @@ fun ProfileUpdateDialog(
                 Spacer(Modifier.height(8.dp))
 
                 when {
+                    mapLocationCode != null  -> {
+                        Text(
+                            text = "Detected Location: ${getCountryNameFromCode(mapLocationCode)}",
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        );
+                        newLocationCode = mapLocationCode
+                    }
+
                     detectedCountry.isNotEmpty() -> {
                         Text(
                             text = "Detected Location: $detectedCountry",
@@ -481,9 +555,7 @@ fun ProfileUpdateDialog(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
                         modifier = Modifier.weight(1f),
-//                        enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() &&
-//                                audioUri != null
-                        enabled = newProfileURI != null || newLocation != null
+                        enabled = newProfileURI != null || oldLocationCode != newLocationCode
                     ) {
                         Text("Save", color = Color.White)
                     }

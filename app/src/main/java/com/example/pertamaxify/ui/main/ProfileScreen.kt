@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
@@ -49,7 +50,9 @@ import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.network.NoConnectionScreen
+import com.example.pertamaxify.ui.profile.LocationPickerScreen
 import com.example.pertamaxify.ui.profile.ProfileUpdateDialog
+import com.example.pertamaxify.ui.profile.LocationPickerScreen
 
 @Composable
 fun ProfileScreen() {
@@ -58,7 +61,8 @@ fun ProfileScreen() {
     var profile by remember { mutableStateOf<ProfileResponse?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var showNoConnection by remember { mutableStateOf(false) }
-
+    var showMapPicker by remember { mutableStateOf<Boolean>(false) }
+    var newLocationCode by remember { mutableStateOf<String?>(null) }
     val isConnected by NetworkUtils.isConnected.collectAsState()
     val client = remember { ApiClient.instance }
 
@@ -185,28 +189,44 @@ fun ProfileScreen() {
             }
         }
 
-        // Show Edit Profile Dialog
-        if (showDialog) {
-            ProfileUpdateDialog(
-                onDismiss = { showDialog = false },
-//                onSave = { title, artist, imagePath, audioPath, email ->
-//                    if (email != null) {
-//                        viewModel.saveSong(
-//                            Song(
-//                                title = title,
-//                                artist = artist,
-//                                artwork = imagePath,
-//                                url = audioPath,
-//                                addedBy = email
-//                            ),
-//                            email = email
-//                        )
-//                    }
-//                    showDialog = false
-//                },
-                profile = profile
+        if (showMapPicker) {
+            LocationPickerScreen(
+                onLocationPicked = { _, _, countryCode ->
+                    newLocationCode = countryCode;
+                    showMapPicker = false;
+                },
+                onDismiss = {
+                    showMapPicker = false;
+                    showDialog = true
+                },
             )
+        } else {
+            if (showDialog) {
+                ProfileUpdateDialog(
+                    onDismiss = { showDialog = false },
+                    //                onSave = { title, artist, imagePath, audioPath, email ->
+                    //                    if (email != null) {
+                    //                        viewModel.saveSong(
+                    //                            Song(
+                    //                                title = title,
+                    //                                artist = artist,
+                    //                                artwork = imagePath,
+                    //                                url = audioPath,
+                    //                                addedBy = email
+                    //                            ),
+                    //                            email = email
+                    //                        )
+                    //                    }
+                    //                    showDialog = false
+                    //                },
+                    profile = profile,
+                    mapLocationCode = newLocationCode,
+                    onShowMapClicked = { showMapPicker = true}
+                )
+            }
         }
+        // Show Edit Profile Dialog
+
 
 //        if (showDialog) {
 //            AlertDialog(

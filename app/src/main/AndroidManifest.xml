@@ -31,7 +31,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Pertamaxify"
-        tools:targetApi="34">
+        android:usesCleartextTraffic="true"
+
+        tools:targetApi="34"
+        >
         <activity
             android:name=".ui.main.HomeActivity"
             android:exported="false" />
