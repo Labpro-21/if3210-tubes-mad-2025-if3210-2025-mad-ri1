@@ -102,14 +102,13 @@ fun MusicPlayerScreen(
     var showDeviceDialog by remember { mutableStateOf(false) }
     var selectedDevice by remember { mutableStateOf<String?>(null) }
 
-    // Initialize playback when component is mounted
+
     LaunchedEffect(song) {
         if (isServiceConnected) {
             musicPlayerManager.playSong(song, isSongFromServer, serverId ?: -1)
         }
     }
 
-    // Update position and duration
     LaunchedEffect(isServiceConnected) {
         if (isServiceConnected) {
             while (true) {

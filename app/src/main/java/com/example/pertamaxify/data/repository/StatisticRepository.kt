@@ -1,7 +1,9 @@
 package com.example.pertamaxify.data.repository
 
 import com.example.pertamaxify.data.model.Statistic
+import com.example.pertamaxify.data.model.StatisticWithArtistInfo
 import com.example.pertamaxify.db.StatisticDao
+import com.example.pertamaxify.data.model.ArtistLikeCount
 import javax.inject.Inject
 
 class StatisticRepository @Inject constructor(
@@ -71,6 +73,10 @@ class StatisticRepository @Inject constructor(
         return statisticDao.getLastPlayedSongByDays(email, days)
     }
 
+    suspend fun getAllStatisticByEmailLimit(email: String, limit: Int): List<Statistic> {
+        return statisticDao.getAllStatisticByEmailLimit(email, limit)
+    }
+
     suspend fun getUniqueRecentlyPlayedSongIds(email: String, limit: Int = 20): List<Int> {
         val statistics =
             statisticDao.getAllStatisticByEmail(email).sortedByDescending { it.playedAt }
@@ -103,6 +109,14 @@ class StatisticRepository @Inject constructor(
         }
 
         return songsOnStreak
+    }
+
+    suspend fun getLast20WithArtistPlayCount(email: String): List<StatisticWithArtistInfo> {
+        return statisticDao.getLast20WithArtistPlayCount(email)
+    }
+
+    suspend fun getLikedSongCountPerArtist(email: String): List<ArtistLikeCount> {
+        return statisticDao.getLikedSongCountPerArtist(email)
     }
 
 }

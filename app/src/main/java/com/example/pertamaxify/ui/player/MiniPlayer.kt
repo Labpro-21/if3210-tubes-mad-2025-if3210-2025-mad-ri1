@@ -51,13 +51,11 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
 ) {
-    // Get states from music player manager
     val isPlaying by musicPlayerManager.isPlaying.collectAsState()
     val currentPosition by musicPlayerManager.currentPosition.collectAsState()
     val duration by musicPlayerManager.duration.collectAsState()
     val currentSong by musicPlayerManager.currentSong.collectAsState()
 
-    // Use the current song from manager if available, otherwise use provided song
     val displaySong = currentSong ?: song ?: Song(
         id = 0,
         title = "No song selected",
@@ -69,14 +67,12 @@ fun MiniPlayer(
     var progress by remember { mutableFloatStateOf(0f) }
     var isLiked by remember { mutableStateOf(displaySong.isLiked ?: false) }
 
-    // Update progress
     LaunchedEffect(currentPosition, duration) {
         if (duration > 0L) {
             progress = (currentPosition.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
         }
     }
 
-    // Initialize song playback if needed
     LaunchedEffect(song) {
         song?.let {
             if (currentSong?.id != it.id) {

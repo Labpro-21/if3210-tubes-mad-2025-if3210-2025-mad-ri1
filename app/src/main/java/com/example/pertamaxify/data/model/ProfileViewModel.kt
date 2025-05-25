@@ -6,22 +6,38 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.remote.ApiClient
 import com.example.pertamaxify.data.repository.ProfileRepository
+import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.data.repository.StatisticRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
 
+data class ProfileData(
+    val email: String,
+    val songCount: Int,
+    val listenedCount: Int,
+    val numberOfLikedSong: Int
+)
+
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val songRepository: SongRepository,
+    private val statisticRepository: StatisticRepository
 ) : ViewModel() {
 
-    // UI State
+
     private val _uiState = mutableStateOf(ProfileUiState())
     val uiState = _uiState
 
-    // Loading state (now part of UI state)
-    // Error messages (now part of UI state)
+    private val _profileData = mutableStateOf<ProfileData?>(null)
+
+
+    fun refreshData(email: String) {
+        updateProfileStatistic(email)
+    }
 
     fun updateProfile(
         token: String,
@@ -54,6 +70,27 @@ class ProfileViewModel @Inject constructor(
                         errorMessage = result.message ?: "Failed to update profile"
                     )
                 }
+            }
+        }
+    }
+
+    fun updateProfileStatistic(
+        email: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val songCount = songRepository.getAllSongsByEmail(email).count()
+                val totalLikedSong = songRepository.getAllLikedSongsByEmail(email).count()
+                val listenedCount = statisticRepository.getAllStatisticByEmail(email).count()
+
+                _profileData.value = ProfileData(
+                    email = email,
+                    songCount = songCount,
+                    listenedCount = listenedCount,
+                    numberOfLikedSong = totalLikedSong
+                )
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error updating profile statistics", e)
             }
         }
     }

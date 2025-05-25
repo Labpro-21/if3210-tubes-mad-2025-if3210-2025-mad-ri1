@@ -37,11 +37,9 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
-    // For deletion confirmation dialog
     var showDeleteDialog by remember { mutableStateOf(false) }
     var songToDelete by remember { mutableStateOf<Song?>(null) }
 
-    // Get user email from token
     val accessToken = SecurePrefs.getAccessToken(context)
     val email = remember {
         if (!accessToken.isNullOrEmpty()) {
@@ -56,7 +54,6 @@ fun HomeScreen(
     val recentlyPlayedSongs by viewModel.recentlyPlayedSongs.collectAsState()
     val recentlyAddedSongs by viewModel.recentlyAddedSongs.collectAsState()
 
-    // Playlist data
     val globalTopSongs by playlistViewModel.globalTopSongs.collectAsState()
     val countryTopSongs by playlistViewModel.countryTopSongs.collectAsState()
     val selectedCountry by playlistViewModel.selectedCountry
@@ -66,19 +63,16 @@ fun HomeScreen(
     val countryErrorMessage by playlistViewModel.countryErrorMessage
 
     LaunchedEffect(Unit) {
-        // Refresh data when screen is shown
         viewModel.refreshAllData(email = email)
         playlistViewModel.fetchGlobalTopSongs()
         playlistViewModel.fetchCountryTopSongs(selectedCountry)
     }
 
-    // Download handler
     val handleDownload = { song: SongResponse ->
         Log.d("HomeScreen", "Starting download for: ${song.title}")
         DownloaderService.startDownload(context, song, email)
     }
 
-    // Delete confirmation dialog
     if (showDeleteDialog && songToDelete != null) {
         AlertDialog(
             onDismissRequest = {
@@ -155,7 +149,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Your locally stored songs
         if (recentlyAddedSongs.isNotEmpty()) {
             NewSongsSection(
                 songs = recentlyAddedSongs,
@@ -166,7 +159,6 @@ fun HomeScreen(
                     viewModel.toggleLikeSong(song)
                 },
                 onDeleteSong = { song ->
-                    // Show confirmation dialog
                     songToDelete = song
                     showDeleteDialog = true
                 }
@@ -175,19 +167,16 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Your recently played songs
         if (recentlyPlayedSongs.isNotEmpty()) {
             RecentlyPlayedSection(
                 songs = recentlyPlayedSongs,
                 onSongClick = { song ->
-                    // Notify parent that song was selected
                     onSongSelected(song)
                 },
                 onToggleLike = { song ->
                     viewModel.toggleLikeSong(song)
                 },
                 onDeleteSong = { song ->
-                    // Show confirmation dialog
                     songToDelete = song
                     showDeleteDialog = true
                 }

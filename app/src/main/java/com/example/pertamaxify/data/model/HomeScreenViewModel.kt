@@ -23,6 +23,9 @@ class HomeViewModel @Inject constructor(
     private val _recentlyAddedSongs = MutableStateFlow<List<Song>>(emptyList())
     val recentlyAddedSongs: StateFlow<List<Song>> = _recentlyAddedSongs
 
+    private val _recommended = MutableStateFlow<List<Song>>(emptyList())
+    val recommended: StateFlow<List<Song>> = _recommended
+
     // Call this function when you want to refresh all data
     fun refreshAllData(email: String) {
         fetchRecentlyPlayedSongs(email)
@@ -67,5 +70,26 @@ class HomeViewModel @Inject constructor(
             statisticRepository.deleteStatisticBySongId(song.id)
             refreshAllData(email)
         }
+    }
+
+    suspend fun getArtistRatings(email: String): Map<String, Double> {
+        val recentStats: List<StatisticWithArtistInfo> = statisticRepository.getLast20WithArtistPlayCount(email)
+        val likeCounts: List<ArtistLikeCount> = statisticRepository.getLikedSongCountPerArtist(email)
+
+        val recentMap: Map<String, Int> = recentStats.associate { it.artist to it.artistPlayCount }
+        val likedMap: Map<String, Int> = likeCounts.associate { it.artist to it.likeCount }
+
+        val allArtists = recentMap.keys + likedMap.keys
+
+        val ratingMap = allArtists.associateWith { artist ->
+            val likeCount = likedMap[artist] ?: 0
+            val recentCount = recentMap[artist] ?: 0
+            0.5 * likeCount + recentCount
+        }
+
+        return ratingMap
+            .toList()
+            .sortedByDescending { it.second }
+            .toMap()
     }
 }

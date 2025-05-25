@@ -51,7 +51,6 @@ class MusicPlayerManager @Inject constructor(
             isBound = true
             _isServiceConnected.value = true
 
-            // Setup listener for player state changes
             musicService?.getPlayer()?.addListener(playerListener)
         }
 
@@ -91,16 +90,13 @@ class MusicPlayerManager @Inject constructor(
         this.serverId = serverId
 
         if (musicService == null) {
-            // Start service if not running
             val intent = Intent(context, MusicService::class.java)
             context.startService(intent)
-            // Wait for service to bind, then play
-            CoroutineScope(Dispatchers.Main).launch {
+                        CoroutineScope(Dispatchers.Main).launch {
                 isServiceConnected.collect { connected ->
                     if (connected && musicService != null) {
                         musicService?.playSong(song, fromServer, serverId)
-                        cancel() // stop collecting once done
-                    }
+                        cancel()                     }
                 }
             }
         } else {

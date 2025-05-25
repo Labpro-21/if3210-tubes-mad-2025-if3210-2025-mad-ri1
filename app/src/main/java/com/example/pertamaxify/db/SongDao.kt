@@ -58,7 +58,6 @@ interface SongDao {
     @Insert
     suspend fun insertSong(song: Song)
 
-    // Specific for an user
     @Query("SELECT * FROM song WHERE addedBy = :username ORDER BY addedTime DESC")
     fun getAllSongByUser(username: String): List<Song>
 
