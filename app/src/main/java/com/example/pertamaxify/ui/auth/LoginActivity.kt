@@ -18,8 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -56,7 +55,8 @@ import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteHint
 import com.example.pertamaxify.ui.theme.WhiteText
 import dagger.hilt.android.AndroidEntryPoint
-
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
@@ -111,6 +111,7 @@ fun LoginPage(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -118,11 +119,13 @@ fun LoginPage(
             .padding(16.dp), contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .width(360.dp)
-                .height(700.dp)
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp)
+                .widthIn(max = 420.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
@@ -163,7 +166,7 @@ fun LoginPage(
             Button(
                 onClick = { onLoginClick(username, password) },
                 modifier = Modifier
-                    .width(327.dp)
+                    .fillMaxWidth()
                     .height(44.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = GreenButton, contentColor = WhiteText
@@ -189,7 +192,6 @@ fun LoginPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .wrapContentWidth(Alignment.CenterHorizontally)
                 )
             }
 
@@ -198,7 +200,7 @@ fun LoginPage(
             Button(
                 onClick = {
                     onLoginClick("guest", "")
-                }, modifier = Modifier.width(327.dp), colors = ButtonDefaults.buttonColors(
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                     containerColor = InputBorder, contentColor = WhiteText
                 ), shape = RoundedCornerShape(48.dp), enabled = !isLoading
             ) {
@@ -232,7 +234,7 @@ fun TextFieldWithLabel(
                 .fillMaxWidth()
                 .border(1.dp, InputBorder, RoundedCornerShape(6.dp))
                 .background(InputBackground, RoundedCornerShape(6.dp))
-                .padding(horizontal = 3.dp, vertical = 0.dp)
+                .padding(horizontal = 3.dp)
         ) {
             TextField(
                 value = text,
@@ -276,3 +278,4 @@ fun TextFieldWithLabel(
         }
     }
 }
+
