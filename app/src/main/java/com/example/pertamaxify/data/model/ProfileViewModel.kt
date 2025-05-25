@@ -57,20 +57,6 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
-
-    fun refetchProfile(client: ApiClient) {
-        try {
-            val res = client.getProfile("Bearer $token")
-            if (res.isSuccessful) {
-                profile = res.body()
-                showNoConnection = false
-            } else {
-                Log.e("ProfileScreen", "API Error: ${res.code()}")
-            }
-        } catch (e: Exception) {
-            Log.e("ProfileScreen", "Exception: ${e.localizedMessage}")
-        }
-    }
 }
 
 data class ProfileUiState(
