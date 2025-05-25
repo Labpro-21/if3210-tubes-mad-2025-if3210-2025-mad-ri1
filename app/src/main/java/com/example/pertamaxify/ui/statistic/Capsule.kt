@@ -35,8 +35,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.ui.theme.Typography
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Preview
 @Composable
@@ -65,9 +68,9 @@ fun Capsule(
                 topSongName        = monthStat.topSong,
                 topSongImageUrl    = monthStat.songImage ?: "",
                 streakDays         = monthStat.streakDay ?: 0,
-                streakSongTitle    = "",
-                streakSongArtist   = "",
-                streakCoverUrl     = "",
+                streakSong         = monthStat.streakSong,
+                streakStart        = monthStat.streakStartDate,
+                streakEnd          = monthStat.streakEndDate,
             )
         }
     }
@@ -82,9 +85,9 @@ fun MonthlyStatsScreen(
     topSongName: String,
     topSongImageUrl: String,
     streakDays: Int,
-    streakSongTitle: String,
-    streakSongArtist: String,
-    streakCoverUrl: String,
+    streakSong: Song? = null,
+    streakStart: LocalDate? = null,
+    streakEnd: LocalDate? = null,
     onShareClick: () -> Unit = {},
     onClick: () -> Unit = {},
     onDownloadClick: () -> Unit = {}
@@ -182,56 +185,66 @@ fun MonthlyStatsScreen(
         Spacer(Modifier.height(24.dp))
 
         // Streak card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column {
-                Box  {
-                    AsyncImage(
-                        model = streakCoverUrl,
-                        contentDescription = "Streak cover",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                    )
-                    IconButton(
-                        onClick = onShareClick,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share",
-                            tint = Color.White
+        if (streakDays > 1 && streakStart != null && streakEnd != null && streakSong != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column {
+                    Box  {
+                        AsyncImage(
+                            model = streakSong.artwork,
+                            contentDescription = "Streak cover",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
                         )
+                        IconButton(
+                            onClick = onShareClick,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share",
+                                tint = Color.White
+                            )
+                        }
                     }
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "You had a $streakDays-day streak",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "You played ${streakSong.title} by ${streakSong.artist.trim()} day after day. You were on fire.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                    val dateRange = if (streakStart.monthValue == streakEnd.monthValue) {
+                        val formatter = DateTimeFormatter.ofPattern("MMM d")
+                        "${streakStart.format(formatter)}–${streakEnd.dayOfMonth}, ${streakEnd.year}"
+                    } else {
+                        val formatter = DateTimeFormatter.ofPattern("MMM d")
+                        "${streakStart.format(formatter)}–${streakEnd.format(formatter)}, ${streakEnd.year}"
+                    }
+
+                    Text(
+                        text = dateRange, // Use the dynamic dateRange string
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .align(Alignment.End)
+                    )
                 }
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = "You had a $streakDays-day streak",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "You played $streakSongTitle by ${streakSongArtist.trim()} day after day. You were on fire.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                Text(
-                    text = "Mar 21–25, 2025",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .align(Alignment.End)
-                )
             }
         }
 
