@@ -32,6 +32,7 @@ import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.SongResponse
 import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.player.MusicPlayerManager
 import com.example.pertamaxify.ui.library.LibraryScreen
 import com.example.pertamaxify.ui.player.MiniPlayer
 import com.example.pertamaxify.ui.player.MusicPlayerScreen
@@ -47,6 +48,9 @@ class HomeActivity : ComponentActivity() {
 
     @Inject
     lateinit var songRepository: SongRepository
+
+    @Inject
+    lateinit var musicPlayerManager: MusicPlayerManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +74,7 @@ class HomeActivity : ComponentActivity() {
                     playlistViewModel = playlistViewModel,
                     libraryViewModel = libraryViewModel,
                     statisticViewModel = statisticViewModel,
+                    musicPlayerManager = musicPlayerManager,
                     deepLinkServerId = if (deepLinkId != -1) deepLinkId else null
                 )
             }
@@ -84,6 +89,7 @@ fun MainScreen(
     playlistViewModel: PlaylistViewModel,
     libraryViewModel: LibraryViewModel,
     statisticViewModel: StatisticViewModel,
+    musicPlayerManager: MusicPlayerManager,
     deepLinkServerId: Int? = null
 ) {
     val context = LocalContext.current
@@ -106,7 +112,6 @@ fun MainScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
 
     // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
@@ -169,13 +174,26 @@ fun MainScreen(
                         currentOnlineSong = null
 
                         mainViewModel.updateSelectedSong(newSong, userEmail)
+                        musicPlayerManager.playSong(newSong, false, -1)
                     },
                     onOnlineSongSelected = { onlineSong ->
                         // Playing an online song
                         isPlayingOnlineSong = true
                         currentOnlineSong = onlineSong
 
-                        // Not updating any database when playing online song
+                        // Create a temporary Song object from the online song
+                        val tempSong = Song(
+                            id = 0,
+                            title = onlineSong.title,
+                            artist = onlineSong.artist,
+                            artwork = onlineSong.artwork,
+                            url = onlineSong.url,
+                            duration = onlineSong.convertDurationToSeconds(onlineSong.duration),
+                            isDownloaded = false,
+                            addedTime = Date()
+                        )
+
+                        musicPlayerManager.playSong(tempSong, true, onlineSong.id)
                         isPlayerVisible = true
                     }
                 )
@@ -197,6 +215,20 @@ fun MainScreen(
                         songResp?.let {
                             isPlayingOnlineSong = true
                             currentOnlineSong = it
+
+                            // Create a temporary Song object from the online song
+                            val tempSong = Song(
+                                id = 0,
+                                title = it.title,
+                                artist = it.artist,
+                                artwork = it.artwork,
+                                url = it.url,
+                                duration = it.convertDurationToSeconds(it.duration),
+                                isDownloaded = false,
+                                addedTime = Date()
+                            )
+
+                            musicPlayerManager.playSong(tempSong, true, it.id)
                             isPlayerVisible = true
                             selectedTab = 0
                         }
@@ -211,6 +243,7 @@ fun MainScreen(
                     MusicPlayerScreen(
                         song = selectedSong!!,
                         onDismiss = { mainViewModel.dismissPlayer() },
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
                         homeViewModel = homeViewModel,
@@ -221,6 +254,7 @@ fun MainScreen(
                     // Show Mini Player
                     MiniPlayer(
                         song = selectedSong!!,
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = { isPlayerVisible = true }
                     )
@@ -248,6 +282,7 @@ fun MainScreen(
                         onDismiss = {
                             isPlayerVisible = false
                         },
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.Center),
                         isSongFromServer = true,
                         serverId = currentOnlineSong!!.id
@@ -256,6 +291,7 @@ fun MainScreen(
                     // Show Mini Player for online song
                     MiniPlayer(
                         song = tempSong,
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = { isPlayerVisible = true }
                     )
