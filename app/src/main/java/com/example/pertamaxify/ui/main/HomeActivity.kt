@@ -9,16 +9,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.LibraryViewModel
@@ -33,6 +37,7 @@ import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.theme.PertamaxifyTheme
 import com.example.pertamaxify.utils.JwtUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -90,6 +95,10 @@ fun MainScreen(
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
     var currentOnlineSong by remember { mutableStateOf<SongResponse?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+
     // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
         mainViewModel.dismissPlayer()
@@ -117,12 +126,16 @@ fun MainScreen(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        },
         bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+            ,
             contentAlignment = Alignment.Center
         ) {
             when (selectedTab) {
@@ -149,12 +162,26 @@ fun MainScreen(
 
                 1 -> LibraryScreen(
                     viewModel = libraryViewModel,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    snackbarHostState = snackbarHostState,
+                    coroutineScope = coroutineScope
                 )
 
                 2 -> ProfileScreen(
                     statisticViewModel = statisticViewModel
                 )
+
+                3 -> QRScannerScreen { serverId ->
+                    playlistViewModel.viewModelScope.launch {
+                        val songResp = playlistViewModel.getSongByServerId(serverId)
+                        songResp?.let {
+                            isPlayingOnlineSong = true
+                            currentOnlineSong = it
+                            isPlayerVisible = true
+                            selectedTab = 0
+                        }
+                    }
+                }
             }
 
             // Show player for local songs

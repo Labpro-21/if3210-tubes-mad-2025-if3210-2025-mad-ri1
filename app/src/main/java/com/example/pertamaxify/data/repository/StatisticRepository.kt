@@ -43,6 +43,10 @@ class StatisticRepository @Inject constructor(
         statisticDao.deleteStatistic(email, songId)
     }
 
+    suspend fun deleteStatisticBySongId(songId: Int) {
+        statisticDao.deleteStatisticBySongId(songId)
+    }
+
     suspend fun getNumberOfPlaySong(email: String, songId: Int): Int {
         return statisticDao.getNumberOfPlaySong(email, songId)
     }

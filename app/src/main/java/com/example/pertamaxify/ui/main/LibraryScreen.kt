@@ -17,11 +17,15 @@ import com.example.pertamaxify.ui.song.SongListRecyclerView
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
 import com.example.pertamaxify.utils.JwtUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
-    mainViewModel: MainViewModel = hiltViewModel()
+    mainViewModel: MainViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope
 ) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
@@ -37,13 +41,15 @@ fun LibraryScreen(
         email = ""
     }
 
-    // Observe StateFlows from the VM
     val allSongs by viewModel.allSongs.collectAsState()
     val likedSongs by viewModel.likedSongs.collectAsState()
     val downloadedSongs by viewModel.downloadedSongs.collectAsState()
 
-    // Keep track of which tab is active
     var selectedTabIndex by remember { mutableStateOf(0) }
+
+    var selectedSong by remember { mutableStateOf<Song?>(null) }
+    var showContextMenu by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(email) {
         if (email.isNotEmpty()) {
@@ -56,7 +62,6 @@ fun LibraryScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header row with "Your Library" and a plus icon to add a song
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
@@ -77,7 +82,6 @@ fun LibraryScreen(
             )
         }
 
-        // The Dialog to add a new song
         if (showDialog) {
             AddSongDialog(
                 onDismiss = { showDialog = false },
@@ -100,8 +104,67 @@ fun LibraryScreen(
             )
         }
 
-        // Create the Tabs for "All" and "Liked"
         TabRow(selectedTabIndex = selectedTabIndex) {
+            if (showContextMenu && selectedSong != null) {
+                AlertDialog(
+                    onDismissRequest = { showContextMenu = false },
+                    title = { Text("Options for '${selectedSong!!.title}'") },
+                    text = {
+                        Column {
+                            val isLiked = selectedSong!!.isLiked == true
+                            Text(
+                                if (isLiked) "Remove from Liked" else "Add to Liked",
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .clickable {
+                                        try {
+                                            viewModel.toggleLike(selectedSong!!, email)
+                                            showContextMenu = false
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    message = if (isLiked) "Removed from liked" else "Added to liked"
+                                                )
+                                            viewModel.refreshAllData(email)
+                                            }
+                                        } catch (e: Exception) {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Failed to toggle like")
+                                            }
+                                        }
+                                    }
+                            )
+
+                            Text(
+                                "Delete Song",
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .clickable {
+                                        try {
+                                            viewModel.deleteSong(selectedSong!!, email)
+                                            showContextMenu = false
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Song deleted")
+                                            }
+                                            viewModel.refreshAllData(email)
+                                        } catch (e: Exception) {
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Failed to delete song")
+                                            }
+                                        }
+                                    }
+                            )
+
+                        }
+                    },
+                    confirmButton = {},
+                    dismissButton = {
+                        TextButton(onClick = { showContextMenu = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
             Tab(
                 selected = (selectedTabIndex == 0),
                 onClick = { selectedTabIndex = 0 },
@@ -119,7 +182,6 @@ fun LibraryScreen(
             )
         }
 
-        // Based on the selected tab, show the corresponding RecyclerView
         when (selectedTabIndex) {
             0 -> {
                 // All Songs
@@ -129,7 +191,8 @@ fun LibraryScreen(
                         mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-                        // Context menu
+                        selectedSong = song
+                        showContextMenu = true
                     }
                 )
             }
@@ -141,7 +204,8 @@ fun LibraryScreen(
                         mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-                        // Context menu
+                        selectedSong = song
+                        showContextMenu = true
                     }
                 )
             }
@@ -153,7 +217,8 @@ fun LibraryScreen(
                         mainViewModel.updateSelectedSong(song, email)
                     },
                     onSongLongClick = { song ->
-                        // Context menu
+                        selectedSong = song
+                        showContextMenu = true
                     }
                 )
             }

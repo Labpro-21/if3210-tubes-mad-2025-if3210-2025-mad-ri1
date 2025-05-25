@@ -1,6 +1,6 @@
 package com.example.pertamaxify.ui.statistic
 
-import CsvExporter.writeCsvToUri
+import com.example.pertamaxify.utils.StatisticExporter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -54,7 +53,6 @@ import com.example.pertamaxify.ui.theme.Typography
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-@Preview
 @Composable
 fun Capsule(
     email: String? = null,
@@ -69,14 +67,24 @@ fun Capsule(
     }
 
     val stats by statisticViewModel.monthlyStats.collectAsState()
-    val launcher = rememberLauncherForActivityResult(
+    val csvExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv"),
         onResult = { uri ->
             if (uri != null) {
-                writeCsvToUri(context, uri, stats)
+                StatisticExporter.writeCsvToUri(context, uri, stats)
             }
         }
     )
+
+    val pdfExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf"),
+        onResult = { uri ->
+            if (uri != null) {
+                StatisticExporter.writePdfToUri(context, uri, stats)
+            }
+        }
+    )
+
 
     var selectedTopSongs by remember {mutableStateOf<List<Pair<Song, Int>>?>(null)}
     var selectedTopArtists by remember {mutableStateOf<List<Pair<String, Int>>?>(null) }
@@ -88,21 +96,31 @@ fun Capsule(
             IconButton(
                 onClick = {
                     val defaultFileName = "sound_capsule_${System.currentTimeMillis()}.csv"
-                    launcher.launch(defaultFileName)
+                    csvExportLauncher.launch(defaultFileName)
                 },
-                modifier = Modifier
-                    .padding(8.dp)
+                modifier = Modifier.padding(8.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_download), // You may need to import another icon
-                    contentDescription = "Download",
-                    tint = Color.White,
-                    modifier = Modifier.
-                    align(Alignment.Top)
+                    painter = painterResource(R.drawable.csv_logo),
+                    contentDescription = "Download CSV",
+                    tint = Color.White
                 )
             }
-
+            IconButton(
+                onClick = {
+                    val pdfFileName = "sound_capsule_${System.currentTimeMillis()}.pdf"
+                    pdfExportLauncher.launch(pdfFileName)
+                },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.picture_as_pdf),
+                    contentDescription = "Download PDF",
+                    tint = Color.White
+                )
+            }
         }
+
         Spacer(Modifier.height(8.dp))
         if (stats.isEmpty()) {
             Text(

@@ -136,6 +136,16 @@ dependencies {
 
     // Android fragment
     implementation(libs.androidx.fragment.ktx)
+
+    // QR dependencies
+    implementation(libs.core)
+    implementation(libs.androidx.core.ktx.v1101)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.barcode.scanning)
+    implementation (libs.accompanist.permissions)
 }
 
 // Allow references to generated code
