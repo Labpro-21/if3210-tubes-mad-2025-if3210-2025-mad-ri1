@@ -1,5 +1,8 @@
 package com.example.pertamaxify.ui.statistic
 
+import CsvExporter.writeCsvToUri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,10 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.ui.theme.Typography
@@ -47,6 +53,7 @@ fun Capsule(
     email: String? = null,
     statisticViewModel: StatisticViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
 
     LaunchedEffect(email) {
         if (!email.isNullOrBlank()) {
@@ -55,23 +62,56 @@ fun Capsule(
     }
 
     val stats by statisticViewModel.monthlyStats.collectAsState()
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
+        onResult = { uri ->
+            if (uri != null) {
+                writeCsvToUri(context, uri, stats)
+            }
+        }
+    )
 
     Column {
-        Text("Your Sound Capsule", style = Typography.titleLarge)
+        Row {
+            Text("Your Sound Capsule", style = Typography.titleLarge)
+            IconButton(
+                onClick = {
+                    val defaultFileName = "sound_capsule_${System.currentTimeMillis()}.csv"
+                    launcher.launch(defaultFileName)
+                },
+                modifier = Modifier
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_download), // You may need to import another icon
+                    contentDescription = "Download",
+                    tint = Color.White
+                )
+            }
+
+        }
         Spacer(Modifier.height(8.dp))
-        stats.forEach { monthStat ->
-            MonthlyStatsScreen(
-                monthYear          = monthStat.monthYear,
-                minutesListened    = monthStat.timesListened,
-                topArtistName      = monthStat.topArtist,
-                topArtistImageUrl  = monthStat.artistImage ?: "",
-                topSongName        = monthStat.topSong,
-                topSongImageUrl    = monthStat.songImage ?: "",
-                streakDays         = monthStat.streakDay ?: 0,
-                streakSong         = monthStat.streakSong,
-                streakStart        = monthStat.streakStartDate,
-                streakEnd          = monthStat.streakEndDate,
+        if (stats.isEmpty()) {
+            Text(
+                text = "No statistics available. Please listen to some music first.",
+                style = Typography.bodyMedium,
+                modifier = Modifier.padding(16.dp)
             )
+        } else {
+            stats.forEach { monthStat ->
+                MonthlyStatsScreen(
+                    monthYear          = monthStat.monthYear,
+                    minutesListened    = monthStat.timesListened,
+                    topArtistName      = monthStat.topArtist,
+                    topArtistImageUrl  = monthStat.artistImage ?: "",
+                    topSongName        = monthStat.topSong,
+                    topSongImageUrl    = monthStat.songImage ?: "",
+                    streakDays         = monthStat.streakDay ?: 0,
+                    streakSong         = monthStat.streakSong,
+                    streakStart        = monthStat.streakStartDate,
+                    streakEnd          = monthStat.streakEndDate,
+                )
+            }
         }
     }
 }
@@ -90,7 +130,6 @@ fun MonthlyStatsScreen(
     streakEnd: LocalDate? = null,
     onShareClick: () -> Unit = {},
     onClick: () -> Unit = {},
-    onDownloadClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -98,7 +137,6 @@ fun MonthlyStatsScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         Text(
             text = monthYear,
             style = MaterialTheme.typography.headlineLarge,
@@ -106,14 +144,12 @@ fun MonthlyStatsScreen(
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         )
 
-        // Time Listened + Top artist / Top song row
         Row (
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Time listened card
             Card(
                 modifier = Modifier.weight(1f),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -131,7 +167,6 @@ fun MonthlyStatsScreen(
                 }
             }
 
-            // Top artist
             Card(
                 modifier = Modifier.weight(1f),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -157,7 +192,6 @@ fun MonthlyStatsScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // Top song (full width, under the row)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,7 +218,6 @@ fun MonthlyStatsScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Streak card
         if (streakDays > 1 && streakStart != null && streakEnd != null && streakSong != null) {
             Card(
                 modifier = Modifier
@@ -237,7 +270,7 @@ fun MonthlyStatsScreen(
                     }
 
                     Text(
-                        text = dateRange, // Use the dynamic dateRange string
+                        text = dateRange,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier

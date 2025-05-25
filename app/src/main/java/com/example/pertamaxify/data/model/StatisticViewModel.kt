@@ -116,7 +116,6 @@ class StatisticViewModel @Inject constructor(
                 Log.d("StatisticViewModel", "Streak for $year-${month.toString().padStart(2, '0')}: " +
                         "${streakInfo?.days ?: 0} days from ${streakInfo?.startDate} to ${streakInfo?.endDate}")
 
-                // 3. Update how you create the MonthlyStats object
                 stats += MonthlyStats(
                     monthYear = "${target.month.name.take(3)} $year",
                     timesListened = minutesListened,
@@ -143,24 +142,20 @@ class StatisticViewModel @Inject constructor(
         var longestStreakEndDate: LocalDate? = null
 
         var currentStreak = 1
-        var currentStreakEndDate = dates.first()
 
         for (i in 1 until dates.size) {
             if (dates[i-1].plusDays(1) == dates[i]) {
-                // Streak continues
                 currentStreak++
             } else {
-                // Streak broken, check if the previous one was the longest
                 if (currentStreak > longestStreak) {
                     longestStreak = currentStreak
                     longestStreakEndDate = dates[i-1]
                 }
-                // Reset for new streak
+                // Reset
                 currentStreak = 1
             }
         }
 
-        // Final check for the very last streak in the list
         if (currentStreak > longestStreak) {
             longestStreak = currentStreak
             longestStreakEndDate = dates.last()
