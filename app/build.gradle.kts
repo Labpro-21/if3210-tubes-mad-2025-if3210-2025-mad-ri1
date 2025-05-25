@@ -136,6 +136,10 @@ dependencies {
 
     // Android fragment
     implementation(libs.androidx.fragment.ktx)
+
+    implementation(libs.core)
+    implementation(libs.androidx.core.ktx.v1101)
+
 }
 
 // Allow references to generated code
