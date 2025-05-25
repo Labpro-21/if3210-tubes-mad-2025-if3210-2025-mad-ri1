@@ -1,7 +1,9 @@
 package com.example.pertamaxify.ui.profile
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
@@ -57,18 +59,27 @@ import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
+import android.location.Location
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import org.json.JSONObject
+import java.util.Locale
 import kotlinx.coroutines.launch
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileUpdateDialog(
     onDismiss: () -> Unit,
 //    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
-    profile: ProfileResponse?
+    profile: ProfileResponse?,
+//    onCountryDetected: (String) -> Unit
 ) {
-//    var title by remember { mutableStateOf("") }
-//    var artist by remember { mutableStateOf("") }
 
     // Main Variables
     val context = LocalContext.current
@@ -78,26 +89,14 @@ fun ProfileUpdateDialog(
     val scope = rememberCoroutineScope()
     var tempFileUri by remember { mutableStateOf<Uri?>(null) }
     var shouldLaunchCamera by remember { mutableStateOf(false) }
+    var detectedCountry by remember { mutableStateOf<String>("") }
+    var locationError by remember { mutableStateOf<String?>(null) }
+    var showPermissionRationale by remember { mutableStateOf<Boolean>(false) }
+    val detectCountry = remember { mutableStateOf<() -> Unit>({}) }
 
 //    // State to track if metadata extraction is in progress
 //    var isExtracting by remember { mutableStateOf(false) }
-//
-    // Gallery Picker
-//    val imagePickerLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.OpenDocument()
-//    ) { uri: Uri? ->
-//        uri?.let {
-//            try {
-//                // Take persistable URI permission for the image
-//                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-//                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-//                newProfileURI = uri
-//            } catch (e: Exception) {
-//                Log.e("ProfileUpdateDialog", "Error taking persistable permission for image URI: $uri", e)
-//                newProfileURI = uri
-//            }
-//        }
-//    }
+
 
     // File creation
     fun createImageFileUri(): Uri? {
@@ -210,6 +209,167 @@ fun ProfileUpdateDialog(
         )
     }
 
+//    // Get Country Code
+//    fun fetchCountryCode(
+//        latitude: Double,
+//        longitude: Double,
+//        onResult: (String) -> Unit
+//    ) {
+//        // Using Nominatim API (OpenStreetMap)
+//        val url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude"
+//
+//        thread {
+//            try {
+//                val connection = URL(url).openConnection() as HttpURLConnection
+//                connection.requestMethod = "GET"
+//                connection.connect()
+//
+//                if (connection.responseCode == 200) {
+//                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+//                    val countryCode = JSONObject(response).getString("country_code")
+//                    onResult(countryCode.uppercase())
+//                } else {
+//                    onResult("")
+//                }
+//            } catch (e: Exception) {
+//                onResult("")
+//            }
+//        }
+//    }
+//
+//    // Location detection function
+//    fun detectCountry() {
+//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+//        val cancellationTokenSource = CancellationTokenSource()
+//
+//        if (ContextCompat.checkSelfPermission(
+//                context,
+//                Manifest.permission.ACCESS_FINE_LOCATION
+//            ) == PackageManager.PERMISSION_GRANTED
+//        ) {
+//            fusedLocationClient.getCurrentLocation(
+//                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+//                cancellationTokenSource.token
+//            ).addOnSuccessListener { location: Location? ->
+//                location?.let {
+//                    fetchCountryCode(it.latitude, it.longitude) { countryCode ->
+//                        detectedCountry = Locale("", countryCode).displayCountry
+//                        // TODO: STORE ISO CODE USING countryCode
+//                    }
+//                } ?: run {
+//                    detectedCountry = "Location not available"
+//                }
+//            }.addOnFailureListener {
+//                detectedCountry = "Location detection failed"
+//            }
+//        } else {
+//            detectedCountry = "Location permission required"
+//        }
+//        return
+//    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            detectCountry.value()
+        } else {
+            locationError = "Location permission required"
+            detectedCountry = ""
+        }
+    }
+
+    // Fetch country code from coordinates
+    fun fetchCountryCode(latitude: Double, longitude: Double, onResult: (String) -> Unit) {
+        try {
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            addresses?.firstOrNull()?.countryCode?.let { code ->
+                onResult(code.uppercase())
+            } ?: run {
+                locationError = "Could not determine country"
+                onResult("")
+            }
+        } catch (e: Exception) {
+            locationError = "Geocoding failed"
+            onResult("")
+            Log.e("Geocoder", "Error getting country code", e)
+        }
+    }
+
+    detectCountry.value =  {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val cancellationTokenSource = CancellationTokenSource()
+
+        when {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                locationError = null
+
+                fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                    cancellationTokenSource.token
+                ).addOnSuccessListener { location ->
+                    if (location != null) {
+                        fetchCountryCode(location.latitude, location.longitude) { countryCode ->
+                            val countryName = Locale("", countryCode).displayCountry
+                            detectedCountry = countryName
+                        }
+                    } else {
+                        locationError = "Location not available"
+                        detectedCountry = ""
+                    }
+                }.addOnFailureListener { e ->
+                    locationError = "Location detection failed: ${e.localizedMessage}"
+                    detectedCountry = ""
+                    Log.e("Location", "Failed to get location", e)
+                }
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                context as Activity,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) -> {
+                showPermissionRationale = true  // Trigger composable dialog
+            }
+
+            else -> {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        detectCountry.value()
+    }
+
+    if (showPermissionRationale) {
+        AlertDialog(
+            onDismissRequest = { showPermissionRationale = false },
+            title = { Text("Location Permission Needed") },
+            text = { Text("To detect your country, please allow location access") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPermissionRationale = false
+                        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
+                ) {
+                    Text("Allow")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showPermissionRationale = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+
+    // Main Profile Edit Dialogue
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -264,13 +424,31 @@ fun ProfileUpdateDialog(
 
                 Spacer(Modifier.height(8.dp))
 
-                val detectedLocation = "Indonesia"
+                when {
+                    detectedCountry.isNotEmpty() -> {
+                        Text(
+                            text = "Detected Location: $detectedCountry",
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
 
-                Text(
-                    text = "Detected Location: $detectedLocation",
-                    color = Color.White.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                    locationError != null -> {
+                        Text(
+                            text = locationError!!,
+                            color = Color.Red.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = "Location not detected",
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
 
                 Spacer(Modifier.height(32.dp))
 
