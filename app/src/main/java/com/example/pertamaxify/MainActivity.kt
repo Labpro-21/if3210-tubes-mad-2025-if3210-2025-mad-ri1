@@ -18,9 +18,9 @@ import com.example.pertamaxify.db.AppDatabase
 import com.example.pertamaxify.db.DatabaseSeeder
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.main.HomeActivity
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.splash.SplashScreenActivity
 import com.example.pertamaxify.utils.JwtUtils
-import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.workers.TokenRefreshWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -64,8 +64,8 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT in 29..30) {
             DatabaseSeeder.seedSong(applicationContext, database) {
 
-            startActivity(Intent(this, SplashScreenActivity::class.java))
-            finish()
+                startActivity(Intent(this, SplashScreenActivity::class.java))
+                finish()
             }
         } else {
             DatabaseSeeder.seedSong(applicationContext, database) {

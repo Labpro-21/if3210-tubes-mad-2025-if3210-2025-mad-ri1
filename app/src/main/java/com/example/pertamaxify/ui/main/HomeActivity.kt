@@ -49,6 +49,12 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val deepLinkId = intent.getIntExtra("DEEP_LINK_SERVER_ID", -1)
+        if (deepLinkId != -1) {
+            Log.d("Home Activity", "deeplink $deepLinkId")
+        }
+
         setContent {
             PertamaxifyTheme {
                 val mainViewModel: MainViewModel = hiltViewModel()
@@ -62,7 +68,8 @@ class HomeActivity : ComponentActivity() {
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
                     libraryViewModel = libraryViewModel,
-                    statisticViewModel = statisticViewModel
+                    statisticViewModel = statisticViewModel,
+                    deepLinkServerId = if (deepLinkId != -1) deepLinkId else null
                 )
             }
         }
@@ -75,7 +82,8 @@ fun MainScreen(
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
     libraryViewModel: LibraryViewModel,
-    statisticViewModel: StatisticViewModel
+    statisticViewModel: StatisticViewModel,
+    deepLinkServerId: Int? = null
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -102,6 +110,17 @@ fun MainScreen(
     // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
         mainViewModel.dismissPlayer()
+    }
+
+    LaunchedEffect(deepLinkServerId) {
+        deepLinkServerId?.let { id ->
+            val song = playlistViewModel.getSongByServerId(id)
+            if (song != null) {
+                isPlayingOnlineSong = true
+                currentOnlineSong = song
+                isPlayerVisible = true
+            }
+        }
     }
 
     LaunchedEffect(userEmail) {
