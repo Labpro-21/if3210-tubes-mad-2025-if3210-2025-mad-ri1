@@ -93,6 +93,23 @@ This project is made using android studio IDE.
 
 ## Screenshots
 
+### 1. Login  
+![Login](./screenshot/login.png)
+### 2. Music Player   
+![Music Player](./screenshot/player.png)
+### 4. Home  
+![Home](./screenshot/home-with-mini-player.png)
+### 5. Library  
+![Library](./screenshot/library.png)
+
+### Share using Link  
+![Share using Link](./screenshot/share-link.png)
+
+### Share using QR  
+![Share using QR](./screenshot/share-qr.png)
+### QR Scanner  
+![QR Scanner](./screenshot/camera.png)
+
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
