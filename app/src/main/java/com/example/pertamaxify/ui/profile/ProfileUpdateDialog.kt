@@ -1,8 +1,11 @@
 package com.example.pertamaxify.ui.profile
 
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -22,17 +25,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuDefaults.textFieldColors
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose
+    .material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,14 +50,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.ProfileResponse
-import com.example.pertamaxify.ui.song.UploadBox
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
-import com.example.pertamaxify.utils.AudioMetadataExtractor
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,82 +69,146 @@ fun ProfileUpdateDialog(
 ) {
 //    var title by remember { mutableStateOf("") }
 //    var artist by remember { mutableStateOf("") }
-//    var audioUri by remember { mutableStateOf<Uri?>(null) }
 
     // Main Variables
     val context = LocalContext.current
     var newProfileURI by remember { mutableStateOf<Uri?>(null) }
     var newLocation by remember { mutableStateOf<String?>(null) }
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    var tempFileUri by remember { mutableStateOf<Uri?>(null) }
+    var shouldLaunchCamera by remember { mutableStateOf(false) }
 
 //    // State to track if metadata extraction is in progress
 //    var isExtracting by remember { mutableStateOf(false) }
 //
-//    // Coroutine scope for metadata extraction
-//    val coroutineScope = rememberCoroutineScope()
-//
-    // Use OpenDocument for getting persistable permissions
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let {
-            try {
-                // Take persistable URI permission for the image
-                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                newProfileURI = uri
-            } catch (e: Exception) {
-                Log.e("ProfileUpdateDialog", "Error taking persistable permission for image URI: $uri", e)
-                // Store the URI anyway, we'll handle access differently
-                newProfileURI = uri
-            }
-        }
-    }
-//
-//    val audioPickerLauncher = rememberLauncherForActivityResult(
+    // Gallery Picker
+//    val imagePickerLauncher = rememberLauncherForActivityResult(
 //        contract = ActivityResultContracts.OpenDocument()
 //    ) { uri: Uri? ->
 //        uri?.let {
 //            try {
-//                // Take persistable URI permission for the audio
+//                // Take persistable URI permission for the image
 //                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
 //                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-//                audioUri = uri
-//
-//                // Extract metadata when audio is selected
-//                isExtracting = true
-//                coroutineScope.launch {
-//                    val metadata = AudioMetadataExtractor.extractMetadata(context, uri)
-//
-//                    Log.d("AddSongDialog", "Extracted metadata: $metadata")
-//
-//                    // Auto-fill fields with extracted metadata if available
-//                    metadata?.let { meta ->
-//                        // Only set title if it's not empty and the user hasn't entered anything yet
-//                        if (!meta.title.isNullOrBlank() && title.isBlank()) {
-//                            title = meta.title
-//                        }
-//
-//                        // Only set artist if it's not empty and the user hasn't entered anything yet
-//                        if (!meta.artist.isNullOrBlank() && artist.isBlank()) {
-//                            artist = meta.artist
-//                        }
-//
-//                        // Set album art if available and no image is selected yet
-//                        if (meta.albumArt != null && imageUri == null) {
-//                            imageUri = meta.albumArt
-//                        }
-//                    }
-//
-//                    isExtracting = false
-//                }
+//                newProfileURI = uri
 //            } catch (e: Exception) {
-//                Log.e("AddSongDialog", "Error taking persistable permission for audio URI: $uri", e)
-//                // Store the URI anyway, we'll handle access differently
-//                audioUri = uri
-//                isExtracting = false
+//                Log.e("ProfileUpdateDialog", "Error taking persistable permission for image URI: $uri", e)
+//                newProfileURI = uri
 //            }
 //        }
 //    }
+
+    // File creation
+    fun createImageFileUri(): Uri? {
+        return try {
+            val filename = "profile_${System.currentTimeMillis()}.jpg"
+            val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                ?: context.filesDir
+            val file = File(storageDir, filename)
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                file
+            )
+        } catch (e: Exception) {
+            Log.e("Camera", "Error creating temp file", e)
+            null
+        }
+    }
+
+    // Gallery picker
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { newProfileURI = it }
+    }
+
+    // Camera capture
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            newProfileURI = tempFileUri
+        } else {
+            Toast.makeText(context, "Photo capture failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            tempFileUri = createImageFileUri()
+            shouldLaunchCamera = true
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Launch camera if ready
+    LaunchedEffect(shouldLaunchCamera, tempFileUri) {
+        if (shouldLaunchCamera) {
+            val uri = tempFileUri
+            if (uri != null) {
+                cameraLauncher.launch(uri)
+            } else {
+                Log.e("Camera", "URI was null when trying to launch camera")
+            }
+            shouldLaunchCamera = false
+        }
+    }
+
+    // Image source dialog
+    if (showImageSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showImageSourceDialog = false },
+            title = { Text("Select Image Source", style = Typography.titleMedium, color = WhiteText) },
+            text = {
+                Column {
+                    Button(
+                        onClick = {
+                            showImageSourceDialog = false
+                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                == PackageManager.PERMISSION_GRANTED) {
+                                tempFileUri = createImageFileUri()
+                                shouldLaunchCamera = true
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
+                    ) {
+                        Text("Take Photo")
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            showImageSourceDialog = false
+                            galleryLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00796B))
+                    ) {
+                        Text("Choose from Gallery")
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showImageSourceDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFBB86FC))
+                ) {
+                    Text("Cancel")
+                }
+            },
+            containerColor = Color(0xFF1E1E1E)
+        )
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -180,7 +250,7 @@ fun ProfileUpdateDialog(
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.White)
                             .padding(6.dp)
-                            .clickable { imagePickerLauncher.launch(arrayOf("image/*")) })
+                            .clickable { showImageSourceDialog = true })
                 }
 
                 Spacer(Modifier.height(24.dp))
