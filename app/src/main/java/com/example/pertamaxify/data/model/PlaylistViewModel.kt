@@ -102,4 +102,8 @@ class PlaylistViewModel @Inject constructor(
     fun getSupportedCountries(): List<String> {
         return playlistRepository.supportedCountries
     }
+
+    suspend fun getSongByServerId(songId: Int): SongResponse? {
+        return playlistRepository.getSongById(songId)
+    }
 }
