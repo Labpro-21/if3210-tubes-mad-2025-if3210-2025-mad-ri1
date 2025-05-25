@@ -84,6 +84,11 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.media3.ui.v131)
+    implementation(libs.androidx.media3.session)
+
+
 
     // optional - Paging 3 Integration
     implementation(libs.androidx.room.paging)
