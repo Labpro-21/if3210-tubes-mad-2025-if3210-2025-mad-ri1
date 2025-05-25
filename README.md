@@ -97,18 +97,25 @@ This project is made using android studio IDE.
 ![Login](./screenshot/login.png)
 ### 2. Music Player   
 ![Music Player](./screenshot/player.png)
-### 4. Home  
+### 3. Home  
 ![Home](./screenshot/home-with-mini-player.png)
-### 5. Library  
+### 4. Library  
 ![Library](./screenshot/library.png)
+### 5. Profile  
+![Library](./screenshot/profile-with-capsule.png)
+### 6. QR Scanner  
+![QR Scanner](./screenshot/camera.png)
 
-### Share using Link  
+
+## Other Features (Not all features are screenshoted) 
+
+#### Share using Link    
 ![Share using Link](./screenshot/share-link.png)
 
-### Share using QR  
+#### Share using QR  
 ![Share using QR](./screenshot/share-qr.png)
-### QR Scanner  
-![QR Scanner](./screenshot/camera.png)
+
+
 
 
 
