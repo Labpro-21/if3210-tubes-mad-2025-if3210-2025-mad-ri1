@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +93,10 @@ fun MainScreen(
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
     var currentOnlineSong by remember { mutableStateOf<SongResponse?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+
     // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
         mainViewModel.dismissPlayer()
@@ -117,12 +124,16 @@ fun MainScreen(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        },
         bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+            ,
             contentAlignment = Alignment.Center
         ) {
             when (selectedTab) {
@@ -149,7 +160,9 @@ fun MainScreen(
 
                 1 -> LibraryScreen(
                     viewModel = libraryViewModel,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    snackbarHostState = snackbarHostState,
+                    coroutineScope = coroutineScope
                 )
 
                 2 -> ProfileScreen(

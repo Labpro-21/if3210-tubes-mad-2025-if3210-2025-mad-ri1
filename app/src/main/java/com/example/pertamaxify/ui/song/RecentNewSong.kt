@@ -17,6 +17,7 @@ fun NewSongsSection(
     onToggleLike: ((Song) -> Unit)? = null,
     onDeleteSong: ((Song) -> Unit)? = null
 ) {
+    if (songs.isEmpty()) return
     Column(modifier = Modifier.fillMaxWidth().padding(8.dp, 4.dp)) {
         Text("New songs", style = MaterialTheme.typography.titleLarge, color = WhiteText, modifier = Modifier.padding(0.dp, 4.dp))
         LazyRow {
@@ -40,6 +41,7 @@ fun RecentlyPlayedSection(
     onToggleLike: ((Song) -> Unit)? = null,
     onDeleteSong: ((Song) -> Unit)? = null
 ) {
+    if (songs.isEmpty()) return
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Recently played", style = MaterialTheme.typography.titleLarge, color = WhiteText, modifier = Modifier.padding(0.dp, 4.dp))
         Column {

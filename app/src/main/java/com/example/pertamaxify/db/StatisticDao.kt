@@ -37,6 +37,9 @@ interface StatisticDao {
     @Query("DELETE FROM statistic WHERE playedBy = :email AND songId = :songId")
     suspend fun deleteStatistic(email: String, songId: Int)
 
+    @Query("DELETE FROM statistic WHERE songId = :songId")
+    suspend fun deleteStatisticBySongId(songId: Int)
+
     suspend fun getNumberOfPlaySong(email: String, songId: Int): Int {
         val statistics = getAllStatisticByEmail(email)
         return statistics.filter { it.songId == songId }.size

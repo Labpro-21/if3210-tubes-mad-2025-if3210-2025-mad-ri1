@@ -1,11 +1,9 @@
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pertamaxify.R
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.ui.song.SongViewHolder
-
 
 class SongAdapter : RecyclerView.Adapter<SongViewHolder>() {
 
@@ -24,9 +22,10 @@ class SongAdapter : RecyclerView.Adapter<SongViewHolder>() {
         holder.bind(
             song = song,
             onSongClick = { onSongClickListener?.invoke(it) },
-            onLongClick = { showPopupMenu(holder.itemView, it) }
+            onLongClick = { onSongLongClickListener?.invoke(it) } // Just invoke callback
         )
     }
+
 
     override fun getItemCount(): Int = songs.size
 
@@ -42,32 +41,5 @@ class SongAdapter : RecyclerView.Adapter<SongViewHolder>() {
 
     fun setOnSongLongClickListener(listener: (Song) -> Unit) {
         onSongLongClickListener = listener
-    }
-
-    private fun showPopupMenu(view: android.view.View, song: Song) {
-        val popup = PopupMenu(view.context, view)
-
-        // Add menu items
-        if (song.isLiked == true) {
-            popup.menu.add("Remove from Liked")
-        } else {
-            popup.menu.add("Add to Liked")
-        }
-        popup.menu.add("Delete Song")
-
-        // Handle menu selection
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.title.toString()) {
-                "Add to Liked", "Remove from Liked" -> {
-                    onSongLongClickListener?.invoke(song)
-                }
-                "Delete Song" -> {
-                    // Handle delete - you can add a separate callback for this
-                    onSongLongClickListener?.invoke(song)
-                }
-            }
-            true
-        }
-        popup.show()
     }
 }
