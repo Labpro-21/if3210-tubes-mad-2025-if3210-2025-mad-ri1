@@ -133,6 +133,8 @@ dependencies {
     }
     implementation(libs.play.services.tasks)
     implementation(libs.play.services.basement)
+    implementation(libs.osmdroid.android)
+    implementation(libs.osmdroid.wms)
 
     // Android fragment
     implementation(libs.androidx.fragment.ktx)

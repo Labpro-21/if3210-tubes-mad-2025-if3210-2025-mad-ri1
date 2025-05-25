@@ -2,6 +2,8 @@ package com.example.pertamaxify.ui.profile
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.net.Uri
@@ -60,7 +62,12 @@ import com.example.pertamaxify.data.model.ProfileResponse
 import com.example.pertamaxify.ui.theme.Typography
 import com.example.pertamaxify.ui.theme.WhiteText
 import android.location.Location
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.pertamaxify.data.local.SecurePrefs
+import com.example.pertamaxify.data.model.ProfileViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
@@ -68,23 +75,29 @@ import org.json.JSONObject
 import java.util.Locale
 import kotlinx.coroutines.launch
 import java.io.File
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
+import com.example.pertamaxify.utils.getCountryNameFromCode
+import com.example.pertamaxify.data.repository.ProfileRepository
+import com.example.pertamaxify.utils.JwtUtils
+import java.io.FileOutputStream
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileUpdateDialog(
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     onDismiss: () -> Unit,
 //    onSave: (String, String, String?, String, String?) -> Unit, // title, artist, imagePath, audioPath, email
     profile: ProfileResponse?,
+    mapLocationCode: String?,
+    onShowMapClicked: () -> Unit
 //    onCountryDetected: (String) -> Unit
 ) {
 
     // Main Variables
     val context = LocalContext.current
+    // Get user email from token
+    val token = SecurePrefs.getAccessToken(context)
+
     var newProfileURI by remember { mutableStateOf<Uri?>(null) }
-    var newLocation by remember { mutableStateOf<String?>(null) }
+    var oldLocationCode by remember { mutableStateOf<String?>(null) }
     var showImageSourceDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var tempFileUri by remember { mutableStateOf<Uri?>(null) }
@@ -93,23 +106,45 @@ fun ProfileUpdateDialog(
     var locationError by remember { mutableStateOf<String?>(null) }
     var showPermissionRationale by remember { mutableStateOf<Boolean>(false) }
     val detectCountry = remember { mutableStateOf<() -> Unit>({}) }
+    var newLocationCode by remember { mutableStateOf<String?>(null) }
+    var capturedFile by remember { mutableStateOf<File?>(null) }
+//    var selectedLocation by remember { mutableStateOf(profile?.location ?: "") }
 
 //    // State to track if metadata extraction is in progress
 //    var isExtracting by remember { mutableStateOf(false) }
 
+    // Convert URI to File
+    fun uriToFile(uri: Uri): File? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val tempFile = File.createTempFile("profile_import_", ".jpg", context.cacheDir)
+            val outputStream = FileOutputStream(tempFile)
+
+            inputStream?.copyTo(outputStream)
+
+            inputStream?.close()
+            outputStream.close()
+
+            tempFile
+        } catch (e: Exception) {
+            Log.e("Gallery", "Failed to convert Uri to File", e)
+            null
+        }
+    }
 
     // File creation
-    fun createImageFileUri(): Uri? {
+    fun createImageFileUri(): Pair<Uri, File>? {
         return try {
             val filename = "profile_${System.currentTimeMillis()}.jpg"
             val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
                 ?: context.filesDir
             val file = File(storageDir, filename)
-            FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.provider",
                 file
             )
+            Pair(uri, file)
         } catch (e: Exception) {
             Log.e("Camera", "Error creating temp file", e)
             null
@@ -120,7 +155,11 @@ fun ProfileUpdateDialog(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { newProfileURI = it }
+        uri?.let {
+            newProfileURI = it
+            capturedFile = uriToFile(it)
+            Log.d("Gallery", "File path: ${capturedFile?.absolutePath}")
+        }
     }
 
     // Camera capture
@@ -139,7 +178,9 @@ fun ProfileUpdateDialog(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            tempFileUri = createImageFileUri()
+            val fileData = createImageFileUri()
+            tempFileUri = fileData?.first
+            capturedFile = fileData?.second
             shouldLaunchCamera = true
         } else {
             Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
@@ -171,7 +212,7 @@ fun ProfileUpdateDialog(
                             showImageSourceDialog = false
                             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
                                 == PackageManager.PERMISSION_GRANTED) {
-                                tempFileUri = createImageFileUri()
+                                tempFileUri = createImageFileUri()?.first
                                 shouldLaunchCamera = true
                             } else {
                                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -208,65 +249,6 @@ fun ProfileUpdateDialog(
             containerColor = Color(0xFF1E1E1E)
         )
     }
-
-//    // Get Country Code
-//    fun fetchCountryCode(
-//        latitude: Double,
-//        longitude: Double,
-//        onResult: (String) -> Unit
-//    ) {
-//        // Using Nominatim API (OpenStreetMap)
-//        val url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude"
-//
-//        thread {
-//            try {
-//                val connection = URL(url).openConnection() as HttpURLConnection
-//                connection.requestMethod = "GET"
-//                connection.connect()
-//
-//                if (connection.responseCode == 200) {
-//                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-//                    val countryCode = JSONObject(response).getString("country_code")
-//                    onResult(countryCode.uppercase())
-//                } else {
-//                    onResult("")
-//                }
-//            } catch (e: Exception) {
-//                onResult("")
-//            }
-//        }
-//    }
-//
-//    // Location detection function
-//    fun detectCountry() {
-//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-//        val cancellationTokenSource = CancellationTokenSource()
-//
-//        if (ContextCompat.checkSelfPermission(
-//                context,
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            fusedLocationClient.getCurrentLocation(
-//                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-//                cancellationTokenSource.token
-//            ).addOnSuccessListener { location: Location? ->
-//                location?.let {
-//                    fetchCountryCode(it.latitude, it.longitude) { countryCode ->
-//                        detectedCountry = Locale("", countryCode).displayCountry
-//                        // TODO: STORE ISO CODE USING countryCode
-//                    }
-//                } ?: run {
-//                    detectedCountry = "Location not available"
-//                }
-//            }.addOnFailureListener {
-//                detectedCountry = "Location detection failed"
-//            }
-//        } else {
-//            detectedCountry = "Location permission required"
-//        }
-//        return
-//    }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -316,6 +298,9 @@ fun ProfileUpdateDialog(
                         fetchCountryCode(location.latitude, location.longitude) { countryCode ->
                             val countryName = Locale("", countryCode).displayCountry
                             detectedCountry = countryName
+                            oldLocationCode = profile?.location ?: ""
+                            newLocationCode = countryCode
+                            // TODO: STORE ISO CODE USING countryCode
                         }
                     } else {
                         locationError = "Location not available"
@@ -368,7 +353,6 @@ fun ProfileUpdateDialog(
         )
     }
 
-
     // Main Profile Edit Dialogue
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -416,7 +400,7 @@ fun ProfileUpdateDialog(
                 Spacer(Modifier.height(24.dp))
 
                 Button(
-                    onClick = {},
+                    onClick = onShowMapClicked,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
                 ) {
                     Text("Select Location", color = Color.White)
@@ -425,6 +409,15 @@ fun ProfileUpdateDialog(
                 Spacer(Modifier.height(8.dp))
 
                 when {
+                    mapLocationCode != null  -> {
+                        Text(
+                            text = "Detected Location: ${getCountryNameFromCode(mapLocationCode)}",
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        );
+                        newLocationCode = mapLocationCode
+                    }
+
                     detectedCountry.isNotEmpty() -> {
                         Text(
                             text = "Detected Location: $detectedCountry",
@@ -468,22 +461,18 @@ fun ProfileUpdateDialog(
 
                     Button(
                         onClick = {
-//                            if (title.isNotBlank() && artist.isNotBlank() &&
-//                                audioUri != null) {
-//
-//                                // Store URIs directly as strings
-//                                val imageUriString = imageUri.toString()
-//                                val audioUriString = audioUri.toString()
-//
-//                                Log.d("URI:", "Image: $imageUriString, Audio: $audioUriString")
-//                                onSave(title, artist, imageUriString, audioUriString, email)
-//                            }
+                            if (!token.isNullOrBlank()){
+                                profileViewModel.updateProfile(
+                                    token = token,
+                                    countryCode = newLocationCode,
+                                    profilePhoto = capturedFile
+                                )
+                                onDismiss()
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)),
                         modifier = Modifier.weight(1f),
-//                        enabled = !isExtracting && title.isNotBlank() && artist.isNotBlank() &&
-//                                audioUri != null
-                        enabled = newProfileURI != null || newLocation != null
+                        enabled = newProfileURI != null || oldLocationCode != newLocationCode
                     ) {
                         Text("Save", color = Color.White)
                     }

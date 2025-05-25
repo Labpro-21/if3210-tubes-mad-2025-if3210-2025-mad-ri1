@@ -41,9 +41,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.ProfileResponse
+import com.example.pertamaxify.data.model.ProfileViewModel
 import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.remote.ApiClient
@@ -51,19 +53,24 @@ import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.library.AddSongDialog
 import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.network.NoConnectionScreen
+import com.example.pertamaxify.ui.profile.LocationPickerScreen
 import com.example.pertamaxify.ui.statistic.Capsule
 import com.example.pertamaxify.ui.profile.ProfileUpdateDialog
+import com.example.pertamaxify.ui.profile.LocationPickerScreen
+import com.example.pertamaxify.utils.getCountryNameFromCode
 
 @Composable
 fun ProfileScreen(
-    statisticViewModel: StatisticViewModel = hiltViewModel()
+    statisticViewModel: StatisticViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val token = SecurePrefs.getAccessToken(context)
     var profile by remember { mutableStateOf<ProfileResponse?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var showNoConnection by remember { mutableStateOf(false) }
-
+    var showMapPicker by remember { mutableStateOf<Boolean>(false) }
+    var newLocationCode by remember { mutableStateOf<String?>(null) }
     val isConnected by NetworkUtils.isConnected.collectAsState()
     val client = remember { ApiClient.instance }
 
@@ -105,6 +112,7 @@ fun ProfileScreen(
         } else if (!isConnected && profile == null) {
             showNoConnection = true
         }
+
     }
 
     if (showNoConnection) {
@@ -152,7 +160,9 @@ fun ProfileScreen(
             )
 
             Text(
-                text = "Indonesia",
+                text = profile?.location?.let { countryCode ->
+                    getCountryNameFromCode(countryCode)
+                } ?: "Location has not been set",
                 color = Color.White.copy(alpha = 0.7f),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -194,41 +204,29 @@ fun ProfileScreen(
             }
         }
 
-        if (showDialog) {
-            ProfileUpdateDialog(
-                onDismiss = { showDialog = false },
-//                onSave = { title, artist, imagePath, audioPath, email ->
-//                    if (email != null) {
-//                        viewModel.saveSong(
-//                            Song(
-//                                title = title,
-//                                artist = artist,
-//                                artwork = imagePath,
-//                                url = audioPath,
-//                                addedBy = email
-//                            ),
-//                            email = email
-//                        )
-//                    }
-//                    showDialog = false
-//                },
-                profile = profile
+        if (showMapPicker) {
+            LocationPickerScreen(
+                onLocationPicked = { _, _, countryCode ->
+                    newLocationCode = countryCode;
+                    showMapPicker = false;
+                },
+                onDismiss = {
+                    showMapPicker = false;
+                    showDialog = true
+                },
             )
+        } else {
+            if (showDialog) {
+                ProfileUpdateDialog(
+                    profileViewModel = profileViewModel,
+                    onDismiss = {
+                        showDialog = false },
+                    profile = profile,
+                    mapLocationCode = newLocationCode,
+                    onShowMapClicked = { showMapPicker = true}
+                )
+            }
         }
-
-//        if (showDialog) {
-//            AlertDialog(
-//                onDismissRequest = { showDialog = false },
-//                title = { Text("Feature Not Implemented") },
-//                text = { Text("This feature is not available yet.") },
-//                confirmButton = {
-//                    TextButton(onClick = { showDialog = false }) {
-//                        Text("OK")
-//                    }
-//                })
-//        }
-
-
     }
 }
 
