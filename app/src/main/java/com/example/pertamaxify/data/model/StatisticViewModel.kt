@@ -29,6 +29,11 @@ data class MonthlyStats(
     val streakEndDate: LocalDate? = null
 )
 
+data class StreakInfo(
+    val days: Int,
+    val startDate: LocalDate?,
+    val endDate: LocalDate?
+)
 
 const val MONTHLY_STATS_LIMIT = 2
 
@@ -99,44 +104,74 @@ class StatisticViewModel @Inject constructor(
                             Instant.ofEpochMilli(it.playedAt)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                        }
-                        getLongestStreakDays(dates)
+                        }.distinct().sorted() // Use distinct, sorted dates
+                        findLongestStreakInfo(dates) // Use the new function
                     }
 
-                val topStreakEntry = streaks.maxByOrNull { it.value }
-                val streakSongId = topStreakEntry?.key
-                val streakDays = topStreakEntry?.value ?: 0
+                val topStreakEntry = streaks.maxByOrNull { it.value.days }
 
+                val streakSongId = topStreakEntry?.key
+                val streakInfo = topStreakEntry?.value
+
+                Log.d("StatisticViewModel", "Streak for $year-${month.toString().padStart(2, '0')}: " +
+                        "${streakInfo?.days ?: 0} days from ${streakInfo?.startDate} to ${streakInfo?.endDate}")
+
+                // 3. Update how you create the MonthlyStats object
                 stats += MonthlyStats(
                     monthYear = "${target.month.name.take(3)} $year",
                     timesListened = minutesListened,
                     topSong = topSongName,
                     topArtist = topArtistName,
-                    songImage = topSongId?.let { songRepository.getSongById(it).artwork },
+                    songImage = topSongId?.let { userSongsById[it]?.artwork }, // Optimized
                     artistImage = songByArtist?.artwork,
-                    streakSong = streakSongId?.let { songRepository.getSongById(it) },
-                    streakDay = streakDays
+                    streakSong = streakSongId?.let { userSongsById[it] }, // Optimized
+                    streakDay = streakInfo?.days,
+                    streakStartDate = streakInfo?.startDate,
+                    streakEndDate = streakInfo?.endDate
                 )
             }
             _monthlyStats.value = stats
         }
     }
 
-    private fun getLongestStreakDays(dates: List<LocalDate>): Int {
-        val uniqueDates = dates.toSet().sorted()
-        var longest = 0
-        var current = 1
+    private fun findLongestStreakInfo(dates: List<LocalDate>): StreakInfo {
+        if (dates.isEmpty()) {
+            return StreakInfo(0, null, null)
+        }
 
-        for (i in 1 until uniqueDates.size) {
-            if (uniqueDates[i - 1].plusDays(1) == uniqueDates[i]) {
-                current++
+        var longestStreak = 0
+        var longestStreakEndDate: LocalDate? = null
+
+        var currentStreak = 1
+        var currentStreakEndDate = dates.first()
+
+        for (i in 1 until dates.size) {
+            if (dates[i-1].plusDays(1) == dates[i]) {
+                // Streak continues
+                currentStreak++
             } else {
-                longest = maxOf(longest, current)
-                current = 1
+                // Streak broken, check if the previous one was the longest
+                if (currentStreak > longestStreak) {
+                    longestStreak = currentStreak
+                    longestStreakEndDate = dates[i-1]
+                }
+                // Reset for new streak
+                currentStreak = 1
             }
         }
 
-        return maxOf(longest, current)
+        // Final check for the very last streak in the list
+        if (currentStreak > longestStreak) {
+            longestStreak = currentStreak
+            longestStreakEndDate = dates.last()
+        }
+
+        return if (longestStreak > 0 && longestStreakEndDate != null) {
+            val startDate = longestStreakEndDate.minusDays(longestStreak.toLong() - 1)
+            StreakInfo(longestStreak, startDate, longestStreakEndDate)
+        } else {
+            StreakInfo(if(dates.isNotEmpty()) 1 else 0, null, null)
+        }
     }
 
 }
