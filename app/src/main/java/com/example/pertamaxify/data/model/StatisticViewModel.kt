@@ -26,8 +26,12 @@ data class MonthlyStats(
     val streakSong: Song? = null,
     val streakDay: Int? = null,
     val streakStartDate: LocalDate? = null,
-    val streakEndDate: LocalDate? = null
+    val streakEndDate: LocalDate? = null,
+    val top5Songs: List<Pair<Song, Int>> = emptyList(), // Song + times played
+    val top5Artists: List<Pair<String, Int>> = emptyList(), // Artist name + times played
+    val top5ArtistsImage: List<Pair<String, String?>> = emptyList() // Artist name + random song artwork
 )
+
 
 data class StreakInfo(
     val days: Int,
@@ -86,17 +90,38 @@ class StatisticViewModel @Inject constructor(
                     .maxByOrNull { it.value }
                     ?.key
 
-                val topSongName = topSongId?.let { songRepository.getSongById(it).title } ?: "—"
+                val songPlayCounts = plays.groupingBy { it.songId }.eachCount()
+                val top5Songs = songPlayCounts.entries
+                    .sortedByDescending { it.value }
+                    .take(5)
+                    .mapNotNull { entry -> userSongsById[entry.key]?.let { it to entry.value } }
 
-                val topArtistName = topSongId
-                        ?.let { songRepository.getSongById(it).artist }
-                        ?: "—"
+                val artistPlayCounts = plays.mapNotNull { userSongsById[it.songId]?.artist }
+                    .groupingBy { it }
+                    .eachCount()
+                val top5Artists = artistPlayCounts.entries
+                    .sortedByDescending { it.value }
+                    .take(5)
+                    .map { it.toPair() }
+
+                val topSongName = top5Songs.firstOrNull()?.first?.title ?: "—"
+                val topArtistName = top5Artists.firstOrNull()?.first ?: "—"
 
 
                 val songByArtist = songRepository
                     .getAllSongsByArtist(topArtistName)
                     .takeIf { it.isNotEmpty() }
                     ?.random()
+
+                val top5ArtistsImage = top5Artists.map { (artist, _) ->
+                    val artistSongs = songRepository.getAllSongsByArtist(artist)
+                    val randomArtwork = artistSongs
+                        .mapNotNull { it.artwork }
+                        .filter { it.isNotBlank() }
+                        .randomOrNull()
+                    artist to randomArtwork // This will be null if no valid image, handled by UI
+                }
+
 
                 val streaks = plays.groupBy { it.songId }
                     .mapValues { (_, entries) ->
@@ -126,7 +151,10 @@ class StatisticViewModel @Inject constructor(
                     streakSong = streakSongId?.let { userSongsById[it] }, // Optimized
                     streakDay = streakInfo?.days,
                     streakStartDate = streakInfo?.startDate,
-                    streakEndDate = streakInfo?.endDate
+                    streakEndDate = streakInfo?.endDate,
+                    top5Songs = top5Songs,
+                    top5Artists = top5Artists,
+                    top5ArtistsImage = top5ArtistsImage
                 )
             }
             _monthlyStats.value = stats

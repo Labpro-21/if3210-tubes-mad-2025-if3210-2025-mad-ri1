@@ -188,6 +188,10 @@ fun ProfileScreen(
             ) {
                 Text("Logout", color = Color.White)
             }
+
+            if (!profile?.email.isNullOrBlank()) {
+                Capsule(email = profile?.email, statisticViewModel = statisticViewModel)
+            }
         }
 
         if (showDialog) {
@@ -225,9 +229,6 @@ fun ProfileScreen(
 //        }
 
 
-        if (!profile?.email.isNullOrBlank()) {
-            Capsule(email = profile?.email, statisticViewModel = statisticViewModel)
-        }
     }
 }
 
