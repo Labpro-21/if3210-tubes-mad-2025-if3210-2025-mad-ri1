@@ -1,6 +1,5 @@
 package com.example.pertamaxify.data.model
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.repository.SongRepository
@@ -10,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +33,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val history = statisticRepository.getAllStatisticByEmail(email).distinctBy { it.songId }
             val songIds = history.map { it.songId }
-            val songs = List<Song>(songIds.size) { index ->
+            val songs = List(songIds.size) { index ->
                 songRepository.getSongById(songIds[index])
             }
             _recentlyPlayedSongs.value = songs
@@ -66,6 +64,7 @@ class HomeViewModel @Inject constructor(
     fun deleteSong(song: Song, email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             songRepository.deleteSong(song)
+            statisticRepository.deleteStatisticBySongId(song.id)
             refreshAllData(email)
         }
     }

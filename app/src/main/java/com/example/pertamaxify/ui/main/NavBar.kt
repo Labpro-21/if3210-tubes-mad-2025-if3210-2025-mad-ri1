@@ -22,7 +22,8 @@ fun NavBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
     val items = listOf(
         NavItem("Home", R.drawable.home, R.drawable.home_active),
         NavItem("Your Library", R.drawable.library, R.drawable.library_active),
-        NavItem("Profile", R.drawable.profile, R.drawable.profile_active)
+        NavItem("Profile", R.drawable.profile, R.drawable.profile_active),
+        NavItem("QR Scanner", R.drawable.qrscan, R.drawable.qrscan)
     )
 
     NavigationBar(

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.data.repository.StatisticRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,14 +14,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val repository: SongRepository
+    private val repository: SongRepository, private val statisticRepository: StatisticRepository
 ) : ViewModel() {
 
-    // For the "All" tab
     private val _allSongs = MutableStateFlow<List<Song>>(emptyList())
     val allSongs: StateFlow<List<Song>> = _allSongs
 
-    // For the "Liked" tab
     private val _likedSongs = MutableStateFlow<List<Song>>(emptyList())
     val likedSongs: StateFlow<List<Song>> = _likedSongs
 
@@ -33,19 +32,19 @@ class LibraryViewModel @Inject constructor(
         fetchDownloadedSongs(email)
     }
 
-    fun fetchAllSongs(email: String) {
+    private fun fetchAllSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _allSongs.value = repository.getAllSongsByEmail(email)
         }
     }
 
-    fun fetchLikedSongs(email: String) {
+    private fun fetchLikedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _likedSongs.value = repository.getAllLikedSongsByEmail(email)
         }
     }
 
-    fun fetchDownloadedSongs(email: String) {
+    private fun fetchDownloadedSongs(email: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _downloadedSongs.value = repository.getAllDownloadedSongsByEmail(email)
         }
@@ -56,6 +55,26 @@ class LibraryViewModel @Inject constructor(
             repository.upsertSong(song)
             // Refresh lists after saving
             refreshAllData(email = email)
+        }
+    }
+
+    fun toggleLike(song: Song, email: String) {
+        viewModelScope.launch {
+            val updatedSong = song.copy(isLiked = !(song.isLiked ?: false))
+            repository.updateSong(updatedSong)
+            refreshAllData(email)
+        }
+    }
+
+    fun deleteSong(song: Song, email: String) {
+        try {
+            viewModelScope.launch {
+                repository.deleteSong(song)
+                statisticRepository.deleteStatisticBySongId(song.id)
+                refreshAllData(email)
+            }
+        } catch (e: Exception) {
+            Log.e("LibraryViewModel", "Error deleting song: ${e.message}")
         }
     }
 }

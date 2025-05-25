@@ -9,8 +9,7 @@ import com.example.pertamaxify.data.model.User
 import com.example.pertamaxify.utils.Converters
 
 @Database(
-    entities = [Song::class, User::class, Statistic::class],
-    version = 1
+    entities = [Song::class, User::class, Statistic::class], version = 1
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

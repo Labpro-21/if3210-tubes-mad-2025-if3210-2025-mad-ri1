@@ -43,6 +43,10 @@ class StatisticRepository @Inject constructor(
         statisticDao.deleteStatistic(email, songId)
     }
 
+    suspend fun deleteStatisticBySongId(songId: Int) {
+        statisticDao.deleteStatisticBySongId(songId)
+    }
+
     suspend fun getNumberOfPlaySong(email: String, songId: Int): Int {
         return statisticDao.getNumberOfPlaySong(email, songId)
     }
@@ -68,13 +72,10 @@ class StatisticRepository @Inject constructor(
     }
 
     suspend fun getUniqueRecentlyPlayedSongIds(email: String, limit: Int = 20): List<Int> {
-        val statistics = statisticDao.getAllStatisticByEmail(email)
-            .sortedByDescending { it.playedAt }
+        val statistics =
+            statisticDao.getAllStatisticByEmail(email).sortedByDescending { it.playedAt }
 
-        return statistics
-            .distinctBy { it.songId }
-            .take(limit)
-            .map { it.songId }
+        return statistics.distinctBy { it.songId }.take(limit).map { it.songId }
     }
 
     suspend fun getUniqueSongsPlayedOnStreak(email: String, streakDays: Int): List<Int> {
@@ -103,7 +104,5 @@ class StatisticRepository @Inject constructor(
 
         return songsOnStreak
     }
-
-
 
 }

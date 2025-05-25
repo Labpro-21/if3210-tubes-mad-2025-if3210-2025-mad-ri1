@@ -43,6 +43,9 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE isDownloaded = 1 AND addedBy = :email ORDER BY addedTime DESC")
     fun getAllDownloadedSongsByEmail(email: String): List<Song>
 
+    @Query("SELECT * FROM song WHERE artist = :artist ORDER BY addedTime DESC")
+    fun getAllSongsByArtist(artist: String): List<Song>
+
     @Upsert
     suspend fun upsertSong(song: Song)
 

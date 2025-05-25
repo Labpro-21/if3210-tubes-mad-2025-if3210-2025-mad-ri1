@@ -20,17 +20,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
+    private val authRepository: AuthRepository, private val userRepository: UserRepository
 ) : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
     var isLoading by mutableStateOf(false)
 
     fun login(
-        context: Context,
-        email: String,
-        password: String,
-        onSuccess: (String, String) -> Unit
+        context: Context, email: String, password: String, onSuccess: (String, String) -> Unit
     ) {
         isLoading = true
 
@@ -45,7 +41,7 @@ class LoginViewModel @Inject constructor(
                     return@launch
                 }
 
-                // API call to login - can be done on IO dispatcher
+                // API call to login
                 val response = withContext(Dispatchers.IO) {
                     authRepository.login(email, password)
                 }
@@ -55,14 +51,16 @@ class LoginViewModel @Inject constructor(
                         val accessToken = loginResponse.accessToken
                         val refreshToken = loginResponse.refreshToken
 
-                        // Upsert user into the database - must be on IO dispatcher
+                        // Upsert user into the database
                         withContext(Dispatchers.IO) {
-                            userRepository.upsertUser(User(
-                                email = email,
-                                username = email.substringBefore("@"),
-                                imageProfile = null,
-                                country = "Indonesia",
-                            ))
+                            userRepository.upsertUser(
+                                User(
+                                    email = email,
+                                    username = email.substringBefore("@"),
+                                    imageProfile = null,
+                                    country = "Indonesia",
+                                )
+                            )
                         }
 
                         // Return to Main thread to update UI

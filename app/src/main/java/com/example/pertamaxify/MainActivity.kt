@@ -18,9 +18,9 @@ import com.example.pertamaxify.db.AppDatabase
 import com.example.pertamaxify.db.DatabaseSeeder
 import com.example.pertamaxify.ui.auth.LoginActivity
 import com.example.pertamaxify.ui.main.HomeActivity
+import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.ui.splash.SplashScreenActivity
 import com.example.pertamaxify.utils.JwtUtils
-import com.example.pertamaxify.ui.network.NetworkUtils
 import com.example.pertamaxify.workers.TokenRefreshWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -38,9 +38,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Deep link intent
+        intent?.data?.let { uri ->
+            if (uri.scheme == "purrytify" && uri.host == "song") {
+                val serverId = uri.lastPathSegment?.toIntOrNull()
+                if (serverId != null) {
+                    forwardDeepLinkToHome(serverId)
+                    return
+                }
+            }
+        }
+
         // Check for network connection
         if (!NetworkUtils.isNetworkConnected(this)) {
-            // Log the network issue and go to login screen
             Log.e("MainActivity", "No internet connection. Redirecting to login.")
             openLoginScreen()
             return
@@ -49,23 +59,24 @@ class MainActivity : ComponentActivity() {
         // Start the background worker
         startTokenRefreshWorker()
 
-        // Show splash screen only for API 29 & 30
-        if (Build.VERSION.SDK_INT in 29..30) {
-            DatabaseSeeder.seedSong(applicationContext, database) {
+        DatabaseSeeder.seedSong(applicationContext, database) {
+            // Show splash screen only for API 29 & 30
+            if (Build.VERSION.SDK_INT in 29..30) {
+                startActivity(Intent(this, SplashScreenActivity::class.java))
+                finish()
 
-            startActivity(Intent(this, SplashScreenActivity::class.java))
-            finish()
+            } else {
+                // for API 30+
+                DatabaseSeeder.seedSong(applicationContext, database) {
+                    checkAuthentication()
+                }
             }
-        } else {
-            DatabaseSeeder.seedSong(applicationContext, database) {
-                checkAuthentication()
-            }
+
         }
     }
 
     private fun checkAuthentication() {
         val accessToken = SecurePrefs.getAccessToken(this)
-
         Log.d("MainActivity", "Checking authentication token.")
 
         if (!accessToken.isNullOrEmpty()) {
@@ -108,7 +119,6 @@ class MainActivity : ComponentActivity() {
         }
 
         Log.d("MainActivity", "No Token Found.")
-        // Seed
         DatabaseSeeder.seedSong(applicationContext, database) {
             openLoginScreen()
         }
@@ -117,19 +127,15 @@ class MainActivity : ComponentActivity() {
     private fun startTokenRefreshWorker() {
         Log.d("MainActivity", "Scheduling TokenRefreshWorker...")
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        val constraints =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-        val workRequest = OneTimeWorkRequestBuilder<TokenRefreshWorker>()
-            .setConstraints(constraints)
-            .setInitialDelay(5, TimeUnit.MINUTES)
-            .build()
+        val workRequest =
+            OneTimeWorkRequestBuilder<TokenRefreshWorker>().setConstraints(constraints)
+                .setInitialDelay(5, TimeUnit.MINUTES).build()
 
         WorkManager.getInstance(this).enqueueUniqueWork(
-            "TokenRefreshWorker",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
+            "TokenRefreshWorker", ExistingWorkPolicy.REPLACE, workRequest
         )
 
         Log.d("MainActivity", "TokenRefreshWorker scheduled successfully!")
@@ -148,4 +154,13 @@ class MainActivity : ComponentActivity() {
             finish()
         }
     }
+
+    private fun forwardDeepLinkToHome(serverId: Int) {
+        val deepLinkIntent = Intent(this, HomeActivity::class.java).apply {
+            putExtra("DEEP_LINK_SERVER_ID", serverId)
+        }
+        startActivity(deepLinkIntent)
+        finish()
+    }
 }
+

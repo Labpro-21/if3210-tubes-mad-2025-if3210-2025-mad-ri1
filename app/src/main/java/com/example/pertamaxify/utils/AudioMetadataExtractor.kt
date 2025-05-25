@@ -26,50 +26,46 @@ object AudioMetadataExtractor {
 
     /**
      * Extract metadata from an audio file
-     * @param context Application context
-     * @param audioUri URI of the audio file
-     * @return AudioMetadata object containing the extracted metadata, or null if extraction failed
      */
-    suspend fun extractMetadata(context: Context, audioUri: Uri): AudioMetadata? = withContext(Dispatchers.IO) {
-        val retriever = MediaMetadataRetriever()
+    suspend fun extractMetadata(context: Context, audioUri: Uri): AudioMetadata? =
+        withContext(Dispatchers.IO) {
+            val retriever = MediaMetadataRetriever()
 
-        try {
-            retriever.setDataSource(context, audioUri)
-
-            // Extract basic metadata
-            val title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-            val artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-                ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
-            val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            val duration = durationStr?.toLongOrNull() ?: 0L
-
-            // Extract album art
-            val albumArtUri = extractAlbumArt(context, retriever)
-
-            // Create and return metadata object
-            AudioMetadata(
-                title = title,
-                artist = artist,
-                albumArt = albumArtUri,
-                duration = duration
-            )
-        } catch (e: Exception) {
-            Log.e("AudioMetadataExtractor", "Error extracting metadata: ${e.message}")
-            null
-        } finally {
             try {
-                retriever.release()
+                retriever.setDataSource(context, audioUri)
+
+                // Extract basic metadata
+                val title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                val artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                    ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
+                val durationStr =
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                val duration = durationStr?.toLongOrNull() ?: 0L
+
+                // Extract album art
+                val albumArtUri = extractAlbumArt(context, retriever)
+
+                // Create and return metadata object
+                AudioMetadata(
+                    title = title, artist = artist, albumArt = albumArtUri, duration = duration
+                )
             } catch (e: Exception) {
-                Log.e("AudioMetadataExtractor", "Error releasing MediaMetadataRetriever: ${e.message}")
+                Log.e("AudioMetadataExtractor", "Error extracting metadata: ${e.message}")
+                null
+            } finally {
+                try {
+                    retriever.release()
+                } catch (e: Exception) {
+                    Log.e(
+                        "AudioMetadataExtractor",
+                        "Error releasing MediaMetadataRetriever: ${e.message}"
+                    )
+                }
             }
         }
-    }
 
     /**
-     * Extract album art from the media and save it to a temporary file
-     * @param context Application context
-     * @param retriever Media metadata retriever with data source already set
-     * @return URI of the extracted album art image, or null if no album art found or extraction failed
+     * Extract album art from the media
      */
     private fun extractAlbumArt(context: Context, retriever: MediaMetadataRetriever): Uri? {
         try {
@@ -99,52 +95,10 @@ object AudioMetadataExtractor {
 
             // Return URI to the saved file
             return Uri.fromFile(tempFile)
+
         } catch (e: Exception) {
             Log.e("AudioMetadataExtractor", "Error extracting album art: ${e.message}")
             return null
-        }
-    }
-
-    /**
-     * Get just the title from an audio file (without extracting other metadata)
-     */
-    fun getAudioTitle(context: Context, audioUri: Uri): String? {
-        val retriever = MediaMetadataRetriever()
-
-        try {
-            retriever.setDataSource(context, audioUri)
-            return retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-        } catch (e: Exception) {
-            Log.e("AudioMetadataExtractor", "Error getting title: ${e.message}")
-            return null
-        } finally {
-            try {
-                retriever.release()
-            } catch (e: Exception) {
-                Log.e("AudioMetadataExtractor", "Error releasing MediaMetadataRetriever: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Get just the artist from an audio file (without extracting other metadata)
-     */
-    fun getAudioArtist(context: Context, audioUri: Uri): String? {
-        val retriever = MediaMetadataRetriever()
-
-        try {
-            retriever.setDataSource(context, audioUri)
-            return retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-                ?: retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
-        } catch (e: Exception) {
-            Log.e("AudioMetadataExtractor", "Error getting artist: ${e.message}")
-            return null
-        } finally {
-            try {
-                retriever.release()
-            } catch (e: Exception) {
-                Log.e("AudioMetadataExtractor", "Error releasing MediaMetadataRetriever: ${e.message}")
-            }
         }
     }
 }

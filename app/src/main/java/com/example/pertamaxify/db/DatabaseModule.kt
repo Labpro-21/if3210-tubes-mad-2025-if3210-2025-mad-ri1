@@ -1,11 +1,13 @@
 package com.example.pertamaxify.db
 
 import android.content.Context
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.room.Room
 import com.example.pertamaxify.data.remote.AuthRepository
 import com.example.pertamaxify.data.repository.SongRepository
 import com.example.pertamaxify.data.repository.StatisticRepository
 import com.example.pertamaxify.data.repository.UserRepository
+import com.example.pertamaxify.player.MusicPlayerManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,14 +19,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    // Provide the Room Database
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "pertamaxify_database"
+            context, AppDatabase::class.java, "pertamaxify_database"
         ).build()
     }
 
@@ -68,6 +67,20 @@ object DatabaseModule {
     @Singleton
     fun provideStatisticRepository(statisticDao: StatisticDao): StatisticRepository {
         return StatisticRepository(statisticDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideExoPlayer(@ApplicationContext context: Context): ExoPlayer {
+        return ExoPlayer.Builder(context).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMusicPlayerManager(
+        @ApplicationContext context: Context
+    ): MusicPlayerManager {
+        return MusicPlayerManager(context)
     }
 
 }

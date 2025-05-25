@@ -12,9 +12,7 @@ object ApiClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .build()
+    private val client = OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
 
     val instance: AuthService by lazy {
         createService(AuthService::class.java)
@@ -25,11 +23,8 @@ object ApiClient {
     }
 
     private fun <T> createService(serviceClass: Class<T>): T {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
-            .build()
+        return Retrofit.Builder().baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create()).client(client).build()
             .create(serviceClass)
     }
 }

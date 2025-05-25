@@ -9,16 +9,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pertamaxify.data.local.SecurePrefs
 import com.example.pertamaxify.data.model.HomeViewModel
 import com.example.pertamaxify.data.model.LibraryViewModel
@@ -26,12 +30,16 @@ import com.example.pertamaxify.data.model.MainViewModel
 import com.example.pertamaxify.data.model.PlaylistViewModel
 import com.example.pertamaxify.data.model.Song
 import com.example.pertamaxify.data.model.SongResponse
+import com.example.pertamaxify.data.model.StatisticViewModel
 import com.example.pertamaxify.data.repository.SongRepository
+import com.example.pertamaxify.player.MusicPlayerManager
+import com.example.pertamaxify.ui.library.LibraryScreen
 import com.example.pertamaxify.ui.player.MiniPlayer
 import com.example.pertamaxify.ui.player.MusicPlayerScreen
 import com.example.pertamaxify.ui.theme.PertamaxifyTheme
 import com.example.pertamaxify.utils.JwtUtils
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -41,20 +49,33 @@ class HomeActivity : ComponentActivity() {
     @Inject
     lateinit var songRepository: SongRepository
 
+    @Inject
+    lateinit var musicPlayerManager: MusicPlayerManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val deepLinkId = intent.getIntExtra("DEEP_LINK_SERVER_ID", -1)
+        if (deepLinkId != -1) {
+            Log.d("Home Activity", "deeplink $deepLinkId")
+        }
+
         setContent {
             PertamaxifyTheme {
                 val mainViewModel: MainViewModel = hiltViewModel()
                 val homeViewModel: HomeViewModel = hiltViewModel()
                 val playlistViewModel: PlaylistViewModel = hiltViewModel()
                 val libraryViewModel: LibraryViewModel = hiltViewModel()
+                val statisticViewModel: StatisticViewModel = hiltViewModel()
 
                 MainScreen(
                     mainViewModel = mainViewModel,
                     homeViewModel = homeViewModel,
                     playlistViewModel = playlistViewModel,
-                    libraryViewModel = libraryViewModel
+                    libraryViewModel = libraryViewModel,
+                    statisticViewModel = statisticViewModel,
+                    musicPlayerManager = musicPlayerManager,
+                    deepLinkServerId = if (deepLinkId != -1) deepLinkId else null
                 )
             }
         }
@@ -66,7 +87,10 @@ fun MainScreen(
     mainViewModel: MainViewModel,
     homeViewModel: HomeViewModel,
     playlistViewModel: PlaylistViewModel,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    statisticViewModel: StatisticViewModel,
+    musicPlayerManager: MusicPlayerManager,
+    deepLinkServerId: Int? = null
 ) {
     val context = LocalContext.current
     val accessToken = SecurePrefs.getAccessToken(context)
@@ -86,9 +110,23 @@ fun MainScreen(
     var isPlayingOnlineSong by remember { mutableStateOf(false) }
     var currentOnlineSong by remember { mutableStateOf<SongResponse?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     // Handle back press when player is visible
     BackHandler(enabled = isPlayerVisible) {
         mainViewModel.dismissPlayer()
+    }
+
+    LaunchedEffect(deepLinkServerId) {
+        deepLinkServerId?.let { id ->
+            val song = playlistViewModel.getSongByServerId(id)
+            if (song != null) {
+                isPlayingOnlineSong = true
+                currentOnlineSong = song
+                isPlayerVisible = true
+            }
+        }
     }
 
     LaunchedEffect(userEmail) {
@@ -113,12 +151,16 @@ fun MainScreen(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        },
         bottomBar = { NavBar(selectedTab, onTabSelected = { selectedTab = it }) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+            ,
             contentAlignment = Alignment.Center
         ) {
             when (selectedTab) {
@@ -132,23 +174,66 @@ fun MainScreen(
                         currentOnlineSong = null
 
                         mainViewModel.updateSelectedSong(newSong, userEmail)
+                        musicPlayerManager.playSong(newSong, false, -1)
                     },
                     onOnlineSongSelected = { onlineSong ->
                         // Playing an online song
                         isPlayingOnlineSong = true
                         currentOnlineSong = onlineSong
 
-                        // Not updating any database when playing online song
+                        // Create a temporary Song object from the online song
+                        val tempSong = Song(
+                            id = 0,
+                            title = onlineSong.title,
+                            artist = onlineSong.artist,
+                            artwork = onlineSong.artwork,
+                            url = onlineSong.url,
+                            duration = onlineSong.convertDurationToSeconds(onlineSong.duration),
+                            isDownloaded = false,
+                            addedTime = Date()
+                        )
+
+                        musicPlayerManager.playSong(tempSong, true, onlineSong.id)
                         isPlayerVisible = true
                     }
                 )
 
                 1 -> LibraryScreen(
                     viewModel = libraryViewModel,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    snackbarHostState = snackbarHostState,
+                    coroutineScope = coroutineScope
                 )
 
-                2 -> ProfileScreen()
+                2 -> ProfileScreen(
+                    statisticViewModel = statisticViewModel
+                )
+
+                3 -> QRScannerScreen { serverId ->
+                    playlistViewModel.viewModelScope.launch {
+                        val songResp = playlistViewModel.getSongByServerId(serverId)
+                        songResp?.let {
+                            isPlayingOnlineSong = true
+                            currentOnlineSong = it
+
+                            // Create a temporary Song object from the online song
+                            val tempSong = Song(
+                                id = 0,
+                                title = it.title,
+                                artist = it.artist,
+                                artwork = it.artwork,
+                                url = it.url,
+                                duration = it.convertDurationToSeconds(it.duration),
+                                isDownloaded = false,
+                                addedTime = Date()
+                            )
+
+                            musicPlayerManager.playSong(tempSong, true, it.id)
+                            isPlayerVisible = true
+                            selectedTab = 0
+                        }
+                    }
+                }
             }
 
             // Show player for local songs
@@ -158,6 +243,7 @@ fun MainScreen(
                     MusicPlayerScreen(
                         song = selectedSong!!,
                         onDismiss = { mainViewModel.dismissPlayer() },
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.Center),
                         email = userEmail,
                         homeViewModel = homeViewModel,
@@ -168,6 +254,7 @@ fun MainScreen(
                     // Show Mini Player
                     MiniPlayer(
                         song = selectedSong!!,
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = { isPlayerVisible = true }
                     )
@@ -195,6 +282,7 @@ fun MainScreen(
                         onDismiss = {
                             isPlayerVisible = false
                         },
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.Center),
                         isSongFromServer = true,
                         serverId = currentOnlineSong!!.id
@@ -203,6 +291,7 @@ fun MainScreen(
                     // Show Mini Player for online song
                     MiniPlayer(
                         song = tempSong,
+                        musicPlayerManager = musicPlayerManager,
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onClick = { isPlayerVisible = true }
                     )
